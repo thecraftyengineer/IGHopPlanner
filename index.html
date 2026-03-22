@@ -1934,21 +1934,20 @@ async function loadNationalHolidays() {
       // Add any hop from the sheet — National Holidays, new hops, anything
       const sub = subCol >= 0 ? (row[subCol] || '').trim() : null;
       const et = timeCol >= 0 ? parseSheetTime(row[timeCol]) : null;
-      // All NATIONAL rows become "National Holiday" with subtitle
-      let finalName = name;
+      // First check if name matches an existing hop in ALL_HOPS (case-insensitive)
+      const exactMatch = ALL_HOPS.find(h => h.toLowerCase() === name.toLowerCase());
+      let finalName = exactMatch || name;
       let finalSub = sub;
-      if (name.toUpperCase().startsWith('NATIONAL')) {
+
+      // Only treat as National Holiday if it's NOT already matched to a specific hop
+      if (!exactMatch && name.toUpperCase().startsWith('NATIONAL')) {
         finalName = 'National Holiday';
         if (!finalSub) {
-          // Use hop name minus "NATIONAL HOLIDAY" or "NATIONAL" prefix as subtitle
           finalSub = name.replace(/^NATIONAL\s+HOLIDAY\s*/i,'').replace(/^NATIONAL\s*/i,'').trim();
         }
-        // Convert subtitle to Title Case
         if (finalSub) finalSub = finalSub.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
       }
-      // Try to match finalName against ALL_HOPS case-insensitively
-      const matchedName = ALL_HOPS.find(h => h.toLowerCase() === finalName.toLowerCase()) || finalName;
-      sheetHops.push({ day, name: matchedName, et, sub: finalSub || null });
+      sheetHops.push({ day, name: finalName, et, sub: finalSub || null });
     }
 
     // Always update DYNAMIC_HOP_DATES and re-render, even if empty
