@@ -635,7 +635,6 @@ const SCHEDULE_2026 = {
   ],
 
   4: [
-    {day:1,name:"National Greeting Card Day",et:{h:11,m:30,p:'A'}},
     {day:1,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
     {day:1,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
     {day:2,name:"This or That",et:{h:10,m:0,p:'A'}},
@@ -1276,13 +1275,16 @@ const SCHEDULE_2026 = {
 // Returns hop dates for current month, merging static schedule with
 // any National Holiday entries loaded from Google Sheet
 let DYNAMIC_HOP_DATES = [];
+let DYNAMIC_HOP_MONTH = null; // 1-indexed month these dates belong to
+let DYNAMIC_HOP_YEAR = null;
 
 function getHopDates(year, month) {
   if (year !== 2026) return DYNAMIC_HOP_DATES;
-  // month is already 1-indexed (callers pass vMonth+1 or realMonth+1)
   const base = SCHEDULE_2026[month] || [];
-  // Merge ALL sheet hops — National Holidays, new hops, anything in the monthly tab
-  return [...base, ...DYNAMIC_HOP_DATES].sort((a,b) => a.day - b.day || a.name.localeCompare(b.name));
+  // Only merge sheet dates if they belong to THIS specific month
+  const sheetDates = (DYNAMIC_HOP_MONTH === month && DYNAMIC_HOP_YEAR === year)
+    ? DYNAMIC_HOP_DATES : [];
+  return [...base, ...sheetDates].sort((a,b) => a.day - b.day || a.name.localeCompare(b.name));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1903,6 +1905,8 @@ function parseSheetTime(raw) {
 async function loadNationalHolidays() {
   // Always clear first so previous month's holidays don't bleed into new month
   DYNAMIC_HOP_DATES = [];
+  DYNAMIC_HOP_MONTH = null;
+  DYNAMIC_HOP_YEAR = null;
   render();
   try {
     const tab = currentMonthTabName();
@@ -1950,8 +1954,10 @@ async function loadNationalHolidays() {
       sheetHops.push({ day, name: finalName, et, sub: finalSub || null });
     }
 
-    // Always update DYNAMIC_HOP_DATES and re-render, even if empty
+    // Store with month/year so they only apply to the correct month
     DYNAMIC_HOP_DATES = sheetHops;
+    DYNAMIC_HOP_MONTH = vMonth + 1; // 1-indexed
+    DYNAMIC_HOP_YEAR = vYear;
     render();
   } catch(e) {
     // Silently fail — app works fine without sheet
