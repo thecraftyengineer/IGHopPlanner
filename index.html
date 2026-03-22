@@ -1,0 +1,1990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>CraftyEngineer's Card Making IG Hop Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--p:#4B0082;--pl:#f3e8ff;--pm:#9d6bbf;--pb:#7b2fbe;--pd:#2d0050;}
+html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+body{
+  background-color:#faf8ff;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='45' cy='60' r='28' fill='rgba(255,107,157,0.18)'/%3E%3Ccircle cx='190' cy='35' r='36' fill='rgba(255,179,71,0.15)'/%3E%3Ccircle cx='360' cy='80' r='22' fill='rgba(79,195,247,0.18)'/%3E%3Ccircle cx='80' cy='180' r='32' fill='rgba(129,199,132,0.16)'/%3E%3Ccircle cx='280' cy='150' r='40' fill='rgba(75,0,130,0.10)'/%3E%3Ccircle cx='420' cy='210' r='24' fill='rgba(255,107,157,0.14)'/%3E%3Ccircle cx='30' cy='300' r='34' fill='rgba(255,179,71,0.16)'/%3E%3Ccircle cx='160' cy='270' r='20' fill='rgba(129,199,132,0.18)'/%3E%3Ccircle cx='340' cy='320' r='38' fill='rgba(79,195,247,0.14)'/%3E%3Ccircle cx='70' cy='400' r='28' fill='rgba(75,0,130,0.12)'/%3E%3Ccircle cx='230' cy='380' r='24' fill='rgba(255,107,157,0.15)'/%3E%3Ccircle cx='400' cy='410' r='32' fill='rgba(255,179,71,0.14)'/%3E%3Ccircle cx='130' cy='100' r='18' fill='rgba(79,195,247,0.20)'/%3E%3Ccircle cx='310' cy='240' r='26' fill='rgba(255,107,157,0.13)'/%3E%3Ccircle cx='460' cy='140' r='20' fill='rgba(129,199,132,0.17)'/%3E%3Ccircle cx='55' cy='240' r='22' fill='rgba(255,179,71,0.13)'/%3E%3Ccircle cx='250' cy='90' r='30' fill='rgba(75,0,130,0.09)'/%3E%3Ccircle cx='140' cy='340' r='36' fill='rgba(255,107,157,0.12)'/%3E%3Ccircle cx='440' cy='340' r='20' fill='rgba(79,195,247,0.16)'/%3E%3Ccircle cx='380' cy='470' r='28' fill='rgba(129,199,132,0.15)'/%3E%3Ccircle cx='100' cy='460' r='24' fill='rgba(255,179,71,0.17)'/%3E%3Ccircle cx='270' cy='450' r='18' fill='rgba(75,0,130,0.11)'/%3E%3C/svg%3E");
+  background-repeat:repeat;background-size:500px 500px;
+  padding-bottom:2rem;
+}
+#wrap{max-width:480px;margin:0 auto;padding:0.75rem;}
+
+/* HEADER */
+.header{background:#4B0082;border-radius:16px;padding:0.75rem 1rem;margin-bottom:0.75rem;}
+.header-top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.header-title{font-size:15px;font-weight:500;color:white;line-height:1.3;margin-bottom:6px;}
+.header-accounts{display:flex;flex-wrap:wrap;gap:4px 12px;}
+.header-acct{font-size:11px;color:rgba(255,255,255,0.7);}
+.header-acct a{color:#FFB347;text-decoration:none;font-weight:500;}
+.month-nav{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-top:2px;}
+.nav-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;color:white;display:flex;align-items:center;justify-content:center;}
+.nav-btn:active{background:rgba(255,255,255,0.3);}
+.month-label{font-size:12px;font-weight:500;color:white;min-width:82px;text-align:center;}
+
+/* SUMMARY */
+.summary-bar{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:0.75rem;align-items:center;}
+.chip{flex:1;text-align:center;padding:8px 4px;border-radius:12px;font-size:11px;font-weight:500;}
+.chip:nth-child(1){background:rgba(243,232,255,0.93);color:#4B0082;}
+.chip:nth-child(2){background:rgba(255,240,245,0.93);color:#c2185b;}
+.chip:nth-child(3){background:rgba(232,245,233,0.93);color:#2e7d32;}
+.chip span{display:block;font-size:20px;font-weight:500;margin-bottom:1px;}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:0.75rem;flex-wrap:wrap;}
+.tab{flex:1;min-width:56px;padding:8px 2px;border-radius:10px;border:1.5px solid #e0d0f0;background:rgba(255,255,255,0.88);font-size:10px;cursor:pointer;color:#9d6bbf;text-align:center;font-weight:500;-webkit-tap-highlight-color:transparent;}
+.tab.active{background:#4B0082;color:white;border-color:#4B0082;}
+
+/* WELCOME / TZ SCREEN */
+#tz-screen{display:block;}
+#app{display:none;}
+.tz-card{background:rgba(255,255,255,0.95);border:2px solid #e0d0f0;border-radius:16px;padding:1.5rem;text-align:center;}
+.tz-dots{display:flex;justify-content:center;gap:7px;margin-bottom:14px;}
+.tz-dot{width:12px;height:12px;border-radius:50%;}
+.tz-app-title{font-size:20px;font-weight:600;color:#4B0082;line-height:1.3;margin-bottom:4px;}
+.tz-app-title span{color:#FF6B9D;}
+.tz-tagline{font-size:11px;color:#9d6bbf;margin-bottom:16px;}
+.tz-tagline a{text-decoration:none;}
+.tz-divider{border:none;border-top:1px solid #f0e8f8;margin:14px 0;}
+.tz-subtitle-main{font-size:16px;font-weight:500;color:#4B0082;margin-bottom:6px;}
+.tz-subtitle-desc{font-size:13px;color:#555;line-height:1.65;}
+.tz-body-text{font-size:12px;color:#666;line-height:1.6;text-align:left;margin-bottom:14px;}
+.tz-label{font-size:12px;font-weight:500;color:#4B0082;margin-bottom:6px;text-align:left;}
+.tz-select{width:100%;padding:10px;border-radius:10px;border:1.5px solid #e0d0f0;font-size:14px;color:#333;background:white;margin-bottom:1rem;-webkit-appearance:none;}
+.tz-btn{width:100%;padding:12px;border-radius:10px;background:#4B0082;border:none;color:white;font-size:15px;font-weight:500;cursor:pointer;}
+.tz-note{font-size:11px;color:#aaa;margin-top:10px;}
+
+/* HINTS */
+.hint-box{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:12px;padding:10px 14px;margin-bottom:0.75rem;}
+.hint-step{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid #f5f0fa;}
+.hint-step:last-child{border-bottom:none;}
+.hint-num{width:20px;height:20px;border-radius:50%;background:#4B0082;color:white;font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.hint-text{font-size:12px;color:#444;line-height:1.55;}
+.tz-badge{font-size:11px;color:#4B0082;background:#f3e8ff;border-radius:20px;padding:2px 9px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;border:1px solid #e0d0f0;margin-left:4px;}
+.cal-hint{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#555;line-height:1.5;}
+
+/* MY HOPS LIST */
+.section-card{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:14px;overflow:hidden;margin-bottom:0.75rem;}
+.join-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #f9f4ff;-webkit-tap-highlight-color:transparent;}
+.join-item:last-child{border-bottom:none;}
+.join-circle{width:26px;height:26px;border-radius:50%;border:2px solid #d0b8e8;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;transition:all 0.15s;cursor:pointer;}
+.join-circle.on{color:white;background:#4B0082;border-color:#4B0082;}
+.join-name-wrap{flex:1;min-width:0;cursor:pointer;}
+.join-name{font-size:13px;color:#333;line-height:1.3;}
+.join-name.on{font-weight:500;color:#4B0082;}
+.join-occ{font-size:11px;color:#bbb;}
+.join-name.on .join-occ{color:#9d6bbf;}
+.join-info-btn{font-size:10px;color:#4B0082;background:#f3e8ff;border:1px solid #e0d0f0;border-radius:20px;padding:3px 8px;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.join-info-inline{padding:8px 14px 12px;border-bottom:1px solid #f0e8f8;background:rgba(253,248,255,0.97);}
+.join-info-inline-desc{font-size:11px;color:#444;line-height:1.6;margin-bottom:8px;}
+
+/* PAST TOGGLE */
+.past-toggle{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:12px;margin-bottom:0.625rem;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+.past-icon{font-size:11px;color:#4B0082;transition:transform 0.2s;}
+.past-icon.open{transform:rotate(90deg);}
+.past-label{font-size:12px;color:#666;flex:1;}
+.past-count{font-size:11px;color:#4B0082;background:#f3e8ff;border-radius:20px;padding:2px 8px;border:1px solid #e0d0f0;}
+
+/* SCHEDULE */
+.day-group{margin-bottom:0.625rem;}
+.day-header{font-size:11px;font-weight:500;color:#9d6bbf;padding:5px 2px 4px;text-transform:uppercase;letter-spacing:0.05em;}
+.day-header.past-hdr{opacity:0.45;}
+.day-header.today-hdr{color:#4B0082;font-size:12px;}
+.hop-card{border-radius:14px;margin-bottom:5px;overflow:hidden;background:rgba(243,232,255,0.93);border:2px solid #4B0082;-webkit-tap-highlight-color:transparent;}
+.hop-card.past-card{opacity:0.55;}
+.hop-card-top{display:flex;align-items:center;gap:8px;padding:0.625rem 0.875rem;cursor:pointer;user-select:none;}
+.hop-card-name{font-size:13px;font-weight:500;flex:1;line-height:1.3;color:#2d0050;}
+.hop-card-sub{font-size:11px;font-weight:400;margin-top:2px;color:#7b2fbe;}
+.hop-card-meta{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+.hop-time{font-size:10px;color:#7b2fbe;}
+.hop-prog{font-size:10px;color:#4B0082;font-weight:500;background:rgba(75,0,130,0.1);border-radius:20px;padding:1px 6px;}
+.expand-arrow{font-size:10px;color:#9d6bbf;transition:transform 0.2s;flex-shrink:0;}
+.expand-arrow.open{transform:rotate(90deg);}
+.hop-info-pill{font-size:9px;color:#7b2fbe;background:rgba(75,0,130,0.08);border:1px solid #dcc6f0;border-radius:20px;padding:3px 8px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.hop-info-pill.active{background:#4B0082;color:white;border-color:#4B0082;}
+
+/* INFO PANEL inside hop card */
+.hop-info-panel{padding:8px 0.875rem 10px;border-top:1px solid #dcc6f0;background:rgba(255,255,255,0.6);}
+.hop-info-desc{font-size:11px;color:#444;line-height:1.6;margin-bottom:8px;white-space:pre-line;}
+.hop-info-graphic{background:#f3e8ff;border:1px dashed #dcc6f0;border-radius:8px;padding:10px;text-align:center;font-size:10px;color:#9d6bbf;margin-bottom:8px;}
+
+/* TASKS */
+.hop-tasks{padding:0.4rem 0.875rem 0.7rem;border-top:1.5px solid #dcc6f0;}
+.task-row{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:8px;margin-bottom:3px;background:transparent;transition:background 0.15s;}
+.task-row.c0{background:#FEE2E2;}.task-row.c1{background:#FEF3C7;}.task-row.c2{background:#D1FAE5;}
+.task-row.c3{background:#E0F2FE;}.task-row.c4{background:#f3e8ff;}.task-row.c5{background:#FCE7F3;}.task-row.c6{background:#ECFCCB;}
+.task-chk{width:20px;height:20px;border-radius:5px;border:2px solid #d0b8e8;background:white;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;-webkit-tap-highlight-color:transparent;}
+.task-chk.d0{background:#DC2626;border-color:#DC2626;color:white;}.task-chk.d1{background:#D97706;border-color:#D97706;color:white;}
+.task-chk.d2{background:#059669;border-color:#059669;color:white;}.task-chk.d3{background:#0284C7;border-color:#0284C7;color:white;}
+.task-chk.d4{background:#4B0082;border-color:#4B0082;color:white;}.task-chk.d5{background:#DB2777;border-color:#DB2777;color:white;}
+.task-chk.d6{background:#65A30D;border-color:#65A30D;color:white;}
+.task-lbl{font-size:12px;flex:1;color:#2d0050;font-weight:500;}
+.task-legend{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:0.75rem;}
+.legend-pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.notes-wrap{margin-top:9px;}
+.notes-lbl{font-size:11px;font-weight:500;color:#7b2fbe;margin-bottom:4px;}
+.notes-ta{width:100%;font-size:12px;background:white;border:1.5px solid #dcc6f0;border-radius:10px;padding:8px 9px;resize:none;font-family:inherit;line-height:1.5;min-height:52px;color:#2d0050;}
+.notes-ta:focus{outline:none;border-color:#4B0082;}
+.notes-ta::placeholder{color:#c4a8df;}
+
+/* HOP INFO TAB */
+.info-intro{font-size:12px;color:#9d6bbf;margin-bottom:10px;line-height:1.5;}
+.info-card{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:14px;margin-bottom:8px;overflow:hidden;}
+.info-card-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+.info-hop-name{font-size:13px;font-weight:500;color:#2d0050;}
+.info-contact-line{font-size:11px;color:#9d6bbf;margin-top:2px;}
+.info-arrow{font-size:11px;color:#9d6bbf;transition:transform 0.2s;flex-shrink:0;}
+.info-arrow.open{transform:rotate(90deg);}
+.info-body{padding:10px 14px 14px;border-top:1px solid #f0e8f8;background:rgba(253,248,255,0.96);}
+.info-desc{font-size:12px;color:#444;line-height:1.65;white-space:pre-line;margin-bottom:12px;}
+.info-graphic{background:#f3e8ff;border:1.5px dashed #dcc6f0;border-radius:10px;padding:14px;text-align:center;font-size:11px;color:#9d6bbf;margin-bottom:12px;}
+.dm-links{display:flex;flex-wrap:wrap;gap:6px;}
+.dm-links-sm{display:flex;flex-wrap:wrap;gap:5px;}
+.dm-link{display:inline-flex;align-items:center;background:#4B0082;color:white;border-radius:20px;padding:5px 13px;font-size:11px;font-weight:500;text-decoration:none;}
+.dm-link-sm{display:inline-flex;align-items:center;background:#4B0082;color:white;border-radius:20px;padding:3px 10px;font-size:10px;font-weight:500;text-decoration:none;}
+
+/* CALENDAR */
+.vcal-wrap{background:rgba(255,255,255,0.93);border:1.5px solid #e0d0f0;border-radius:14px;overflow:hidden;}
+.vcal-hdr{display:grid;grid-template-columns:repeat(7,1fr);background:#4B0082;}
+.vcal-dn{font-size:10px;color:rgba(255,255,255,0.9);font-weight:500;text-align:center;padding:6px 0;}
+.vcal-cells{display:grid;grid-template-columns:repeat(7,1fr);}
+.vcal-cell{border-top:0.5px solid #f0e8f8;border-right:0.5px solid #f0e8f8;min-height:76px;padding:3px;}
+.vcal-cell:nth-child(7n){border-right:none;}
+.vcal-cell.past-cell{opacity:0.4;}
+.vcal-num{font-size:11px;font-weight:500;color:#9d6bbf;margin-bottom:2px;line-height:1;}
+.vcal-num.today{background:#4B0082;color:white;border-radius:50%;width:17px;height:17px;display:flex;align-items:center;justify-content:center;font-size:9px;}
+.vcal-hop{font-size:7px;line-height:1.3;border-radius:3px;padding:1px 2px;margin-bottom:1px;color:#666;background:rgba(245,240,250,0.9);}
+.vcal-hop.joined{background:rgba(243,232,255,0.97);color:#4B0082;font-weight:600;border-left:2px solid #4B0082;padding-left:2px;}
+
+/* PRINT TAB */
+.print-section{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:14px;padding:1rem;margin-bottom:0.75rem;}
+.print-section h3{font-size:14px;font-weight:500;color:#4B0082;margin-bottom:6px;}
+.print-section p{font-size:12px;color:#666;margin-bottom:12px;line-height:1.5;}
+.print-btn{width:100%;padding:11px;border-radius:10px;border:2px solid #4B0082;background:#f3e8ff;font-size:13px;cursor:pointer;color:#4B0082;font-weight:500;margin-bottom:6px;-webkit-tap-highlight-color:transparent;}
+
+/* EMPTY / FOOTER */
+.empty-state{text-align:center;padding:2rem 1rem;color:#9d6bbf;font-size:13px;line-height:1.7;}
+.app-footer{text-align:center;padding:14px 0 4px;font-size:11px;color:#9d6bbf;}
+.app-footer a{color:#4B0082;text-decoration:none;font-weight:500;}
+</style>
+</head>
+<body>
+<div id="wrap">
+
+<!-- ═══════════════════════════════════════
+     WELCOME / TIMEZONE SCREEN
+═══════════════════════════════════════ -->
+<div id="tz-screen">
+  <div class="tz-card">
+    <div class="tz-dots">
+      <div class="tz-dot" style="background:#FF6B9D;"></div>
+      <div class="tz-dot" style="background:#FFB347;"></div>
+      <div class="tz-dot" style="background:#4FC3F7;"></div>
+      <div class="tz-dot" style="background:#81C784;"></div>
+      <div class="tz-dot" style="background:#4B0082;"></div>
+    </div>
+    <div class="tz-app-title">CraftyEngineer's<br>Card Making <span>IG Hop Planner</span></div>
+    <div class="tz-tagline">
+      <a href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:500;">@craftyengineer</a>
+      &nbsp;·&nbsp;
+      <a href="https://instagram.com/cardmakingighophq" style="color:#9d6bbf;">@cardmakingIGHOPHQ</a>
+    </div>
+    <hr class="tz-divider">
+    <div class="tz-subtitle-main">Instagram Hop Planner for Card Makers</div>
+    <div class="tz-subtitle-desc" style="margin-bottom:0;">This tool will help you keep track of all the hops you have joined and the various tasks for each hop.</div>
+    <hr class="tz-divider">
+    <div class="tz-body-text">All hop times are listed in Eastern Time (ET). Select your time zone once and everything converts automatically throughout the app.</div>
+    <div class="tz-label">Your time zone</div>
+    <select class="tz-select" id="tz-select">
+      <option value="-5">Eastern Time (ET)</option>
+      <option value="-6">Central Time (CT)</option>
+      <option value="-7">Mountain Time (MT)</option>
+      <option value="-8">Pacific Time (PT)</option>
+      <option value="-9">Alaska (AKT)</option>
+      <option value="-10">Hawaii (HST)</option>
+      <option value="0">United Kingdom (GMT/BST)</option>
+      <option value="1">Central Europe (CET)</option>
+      <option value="2">Eastern Europe (EET)</option>
+      <option value="3">Moscow / Gulf (UTC+3)</option>
+      <option value="5.5">India (IST)</option>
+      <option value="8">China / Singapore / Perth</option>
+      <option value="9">Japan / Korea (JST)</option>
+      <option value="10">Eastern Australia (AEST)</option>
+      <option value="11">New Zealand (NZST)</option>
+    </select>
+    <button class="tz-btn" onclick="saveTZ()">Let's go!</button>
+    <div class="tz-note">You can change this any time from the My Hops tab.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MAIN APP
+═══════════════════════════════════════ -->
+<div id="app">
+  <div class="header">
+    <div class="header-top-row">
+      <div style="flex:1;">
+        <div class="header-title">CraftyEngineer's Card Making IG Hop Planner</div>
+        <div class="header-accounts">
+          <div class="header-acct">IG: <a href="https://instagram.com/craftyengineer">@craftyengineer</a></div>
+          <div class="header-acct">Hop List HQ IG: <a href="https://instagram.com/cardmakingighophq">@cardmakingIGHOPHQ</a></div>
+        </div>
+      </div>
+      <div class="month-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+        <div class="month-label" id="month-label"></div>
+        <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="summary-bar" class="summary-bar"></div>
+
+  <div class="tabs">
+    <div class="tab active" id="tab-hops" onclick="setTab('hops')">My Hops</div>
+    <div class="tab" id="tab-schedule" onclick="setTab('schedule')">Schedule</div>
+    <div class="tab" id="tab-calendar" onclick="setTab('calendar')">Calendar</div>
+    <div class="tab" id="tab-info" onclick="setTab('info')">Hop Info</div>
+    <div class="tab" id="tab-print" onclick="setTab('print')">Print</div>
+  </div>
+
+  <div id="view"></div>
+
+  <div class="app-footer">craftyengineer.com &nbsp;·&nbsp; @craftyengineer &nbsp;·&nbsp; @cardmakingIGHOPHQ</div>
+</div>
+
+</div><!-- end #wrap -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// STATIC DATA — task definitions and colors never change
+// ═══════════════════════════════════════════════════════════════
+
+const ALL_TASKS = [
+  { label: "Participated in roll call" },
+  { label: "Art made" },
+  { label: "Photos taken/edited" },
+  { label: "Post written" },
+  { label: "Art scheduled" },
+  { label: "Art posted" },
+  { label: "Hopped through" },
+];
+
+const TASK_COLORS = [
+  { bg: "#FEE2E2", text: "#7F1D1D", chk: "#DC2626" },
+  { bg: "#FEF3C7", text: "#78350F", chk: "#D97706" },
+  { bg: "#D1FAE5", text: "#064E3B", chk: "#059669" },
+  { bg: "#E0F2FE", text: "#0C4A6E", chk: "#0284C7" },
+  { bg: "#f3e8ff", text: "#4B0082", chk: "#4B0082" },
+  { bg: "#FCE7F3", text: "#831843", chk: "#DB2777" },
+  { bg: "#ECFCCB", text: "#365314", chk: "#65A30D" },
+];
+
+// ═══════════════════════════════════════════════════════════════
+// GOOGLE SHEETS CONFIG
+// Sheet ID: your spreadsheet
+// HOP_MASTER tab: master hop list with descriptions
+// Monthly tab: e.g. APRIL_2026, MAY_2026 etc.
+// ═══════════════════════════════════════════════════════════════
+const SHEET_ID = '1aWjVj9wQmBhZLtMbtbYXvvqHBMVo5EF-VD4x6ICrYZs';
+const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
+
+// These will be populated by loadFromSheets()
+// ALL_HOPS, HOP_INFO and HOP_TASKS are static — Sheet only adds new hops or updates descriptions
+// These will be overwritten by loadFromSheets() if/when Sheet connection is available
+let HOP_TASKS = {
+  "Sharing Sunday": [],
+};
+
+const ALL_HOPS = [
+  "An Encouraging Word","ATC Scrapmakes","Birthday Bash",
+  "Build Your Stash – Everyday Occasions","Card Clubhouse","Cardmaking YouTube",
+  "Caroling Christmas","CASE IT","Clean & Simple (CAS)","Create 3 Ways",
+  "Crushing Christmas Cards","Cube & Create","Doodle the Possibilities",
+  "Embossing Folder Hop","Fandom Friday","Fans of SSS","Fans of Taylored Expressions",
+  "Fantasy Inspired Design","#ForTheLoveOfLawnFawnDies","Friends in Faith",
+  "Fun on the Farm","Gifted","Gorgeous Gift Tags","Just for Giggles","Just One Color",
+  "Mini Slimline Hop","More Patterned Paper","My Favorite","National Greeting Card Day","National Holiday",
+  "Odd Holidays","One Layer Cards","Patterned Paper","Postage Party Hop",
+  "ProCRAFTinator's Club","Rainbow Connection","Ramadan/Eid","Rediscover Your Supplies",
+  "Sending Sunshine","Shaker Makers","Sharing Sunday","Stashbusters","Stencil Fun",
+  "Tags & Techniques","The Crafty Spotlight","Themed Friday Fun","This or That",
+  "Watercolor Wonder","White on White",
+];
+
+const HOP_INFO = {
+  "Sharing Sunday":{desc:"Low pressure group sharing others' creations to IG stories every Sunday. Tag the creator and use #sharingsundayIGcards. No commitment required every week.",dm:"@nauntie or @craftyengineer"},
+  "Fantasy Inspired Design":{desc:"Cards inspired by fantasy-based themes! Monthly hop on the 1st Sunday at 10AM CST.",dm:"@bkeeleycrafts"},
+  "My Favorite":{desc:"Weekly on Sundays. Create a craft project based on the weekly theme and your favorites.",dm:"@sarae.furr_thecraftyfarmchick"},
+  "Ramadan/Eid":{desc:"Celebrating Ramadan and Eid through card making! Sign up by Feb 26 at 12PM ET.",dm:"@mumuspaperology"},
+  "Fun on the Farm":{desc:"Weekly on Mondays. Farm or farm animal stamps waiting to get inky? Create fun projects to cheer up someone's day!",dm:"@sarae.furr_thecraftyfarmchick"},
+  "Just for Giggles":{desc:"First Tuesday of each month. Spread laughter with sassy, snarky, punny cards!",dm:"@craftyengineer or @artemismade1"},
+  "National Greeting Card Day":{desc:"A one-time hop on Wednesday, April 1 at 11:30A ET. As card makers, we have to celebrate this day by creating a card and sending/giving it to let someone know we are thinking of them. Any occasion or no occasion at all. Just have fun!",dm:"@bkatrein or @salnclts"},
+  "National Holiday":{desc:"Pre-selected national or international holidays each month. Participate in any or all dates. Create a card to fit the theme and post on the date.",dm:"@kellys.craft"},
+  "Mini Slimline Hop":{desc:"First Wednesday at 9AM ET. A 6x6\" card folded in half. No set theme each month.",dm:"@nauntie"},
+  "Card Clubhouse":{desc:"Where everyone is welcome! Bi-monthly on Wednesdays at 11AM EST. Themes shared within the group.",dm:"@createwithkas"},
+  "This or That":{desc:"Weekly every Thursday. Two themes each week — pick this OR that. Roll call weekly, no full commitment needed.",dm:"@stamprgrl"},
+  "Watercolor Wonder":{desc:"Every first Thursday at 11AM ET. Low pressure, inclusive, joy-focused watercolor hop. Monthly themes optional.",dm:"@artemismade1 or @kraftykatzkaleidoscopeofKolors"},
+  "Gorgeous Gift Tags":{desc:"Monthly on the 5th at 7PM UK / 2PM ET. Make at least one gift tag. Optional theme. Build a gift tag stash!",dm:"@purplejetjt"},
+  "Themed Friday Fun":{desc:"Every other Friday at 11AM ET. A new theme each hop to spark creativity!",dm:"@touchofmagik"},
+  "Build Your Stash – Everyday Occasions":{desc:"Monthly on the 1st Friday. Build your stash of everyday occasion cards so you'll always be ready!",dm:"@craftyengineer or @nayscraftyspot"},
+  "Friends in Faith":{desc:"Every Friday. Share your love of Christ and crafting using religious/faith stamps.",dm:"@sarae.furr_thecraftyfarmchick"},
+  "#ForTheLoveOfLawnFawnDies":{desc:"Every other Saturday at 11AM ET. Create using Lawn Fawn dies. Hashtag #fortheloveofLawnFawnDies.",dm:"@katisdekoeck"},
+  "Odd Holidays":{desc:"First Saturday at 12PM ET. Choose any National Day and create a card. Public account required.",dm:"@amritapettus"},
+  "Cardmaking YouTube":{desc:"Monthly — 2nd Sunday at 3PM ET. Make videos of your cardmaking process. Start your YouTube channel!",dm:"@bdcraftsmore"},
+  "ProCRAFTinator's Club":{desc:"Second Monday at 11AM ET. Unfinished kits from classes, camps, or subscriptions? Create something from those kits!",dm:"@createwithkas or @touchofmagik"},
+  "An Encouraging Word":{desc:"2nd and 4th Monday at 2PM ET. A scripture verse designated twice monthly to spark a creative response.",dm:"@newdawncards or @itsawonderful_craft_life"},
+  "Shaker Makers":{desc:"Every second Tuesday at 10AM ET. Creating cards and tags that are shakers!",dm:"@crafteenana or @Shaker_cards_by_julie"},
+  "The Crafty Spotlight":{desc:"Monthly on the 2nd Tuesday. Showcasing different craft companies each month.",dm:"@touchofmagik or @createwithkas"},
+  "Stashbusters":{desc:"Every other Tuesday at 7PM ET. Theme OR Technique — or both for an extra challenge! Confirm participation a couple days before.",dm:"@armenscraftroom"},
+  "White on White":{desc:"2nd Wednesday at Noon EST. All things white (emboss, die cut, gems, pastes) with one optional accent color.",dm:"@itsawonderful_craft_life or @lizzardsbf"},
+  "Clean & Simple (CAS)":{desc:"Monthly on the 2nd Thursday. Clean and simple cardmaking — less is more!",dm:"@nauntie"},
+  "Stencil Fun":{desc:"Monthly on the 12th at 2PM ET / 7PM UK. Use a stencil in your creation. Optional themes.",dm:"@purplejetjt"},
+  "Sending Sunshine":{desc:"Monthly on 2nd Friday. Positive, encouragement-type cards. Spread some sunshine!",dm:"@craftyengineer or @missmissamakes"},
+  "CASE IT":{desc:"2nd Saturday. CASE = Copy and Share Everything. Inspired by another creator's card — share both yours and the original.",dm:"@nauntie"},
+  "Caroling Christmas":{desc:"Every 2nd Saturday. Two holiday playlist songs each month — create card(s) inspired by one or both. Public account required.",dm:"@amritapettus"},
+  "Gifted":{desc:"Monthly on the 3rd Sunday at 3PM ET. Make a handmade gift — gift card holders, cards, coasters, candles, ornaments — anything goes!",dm:"@touchofmagik or @missmissamakes or @createwithkas or @craftyengineer"},
+  "Just One Color":{desc:"Monthly on the 3rd Monday. Challenge: only use that month's designated color on your project.",dm:"@craftyengineer or @sharonjamesorama"},
+  "ATC Scrapmakes":{desc:"3rd Tuesday at 8AM ET. Artist Trading Cards (2.5x3.5\") using scraps and leftovers. Great for mail, desks, lunch boxes!",dm:"@missmissamakes"},
+  "Fans of SSS":{desc:"3rd Tuesday. Simon Says Stamp or CZ Designs fan? Create with SSS branded items.",dm:"@createwithkas or @touchofmagik"},
+  "Postage Party Hop":{desc:"Monthly on the 3rd Wednesday at 3PM ET. Use your postage collection items. Monthly technique-centered themes.",dm:"@craftyengineer or @newdawncards"},
+  "Tags & Techniques":{desc:"3rd Thursday at 3PM ET. Tags showcasing a new technique monthly. Instructions shared ahead of time.",dm:"@touchofmagik or @craftyengineer"},
+  "Fandom Friday":{desc:"3rd Friday at 5PM CST. Super fan of movies, books, music, TV, games, toys? Showcase your fandoms!",dm:"@artemismade1 or @journeycoachjenn"},
+  "Create 3 Ways":{desc:"Monthly on every 3rd Saturday at 3PM ET. Create 3 distinct cards with one common product or technique.",dm:"@amritapettus"},
+  "Fans of Taylored Expressions":{desc:"Third Saturday at 3PM ET. Monthly themes vary. Hashtag #TEFanIGHop.",dm:"@papercraftingbliss"},
+  "Embossing Folder Hop":{desc:"Monthly on the 4th Monday at 11AM ET. Use an embossing folder in your creation.",dm:"@bdcraftsmore"},
+  "Birthday Bash":{desc:"4th Tuesday at 3:30PM ET. Birthday cards with a monthly theme and mood board for inspiration!",dm:"@missmissamakes"},
+  "Rainbow Connection":{desc:"4th Wednesday at 1PM ET. Rainbow-colored cards with 50-75% white/clean and simple style.",dm:"@craftyengineer or @nauntie"},
+  "Doodle the Possibilities":{desc:"Monthly on the 4th Thursday at 2PM ET. Hand-drawn doodles for backgrounds or focal elements. Sentiments can be stamped.",dm:"@craftyengineer or @newdawncards"},
+  "Rediscover Your Supplies":{desc:"Monthly on the last Saturday at 11AM ET. Root through your craft drawers and rediscover hidden treasures!",dm:"@amritapettus"},
+  "Cube & Create":{desc:"Monthly on the 4th Saturday at 1PM ET. Sarah Renae Clark's Color Cubes palettes for inspiration.",dm:"@table_in_the_attic or @nayscraftyspot"},
+  "More Patterned Paper":{desc:"Monthly on the 28th at 2PM ET / 7PM UK. Any project using patterned paper.",dm:"@purplejetjt"},
+  "Crushing Christmas Cards":{desc:"Monthly on the 20th at 11AM ET. Get your Christmas cards done ahead of time!",dm:"@bdk_creations"},
+  "Patterned Paper":{desc:"Monthly on the 20th at 7PM UK / 2PM ET. Cards, tags, ATCs, scrapbook pages — any project using patterned paper.",dm:"@purplejetjt"},
+  "One Layer Cards":{desc:"Monthly on the last day of the month at 4PM ET. Create with just one layer — no layering papers!",dm:"@kydicreate or @kelleymakescards"},
+};
+let HOP_DATES = [];
+let dataLoaded = false;
+let dataError = false;
+
+// Refreshes HOP_DATES for the current month from static schedule + dynamic sheet data
+
+// Parse time string like "(11A ET USA)" or "(1:30P ET USA/6:30P UK)" into {h,m,p} object
+function parseTimeStr(raw) {
+  if (!raw) return null;
+  const s = raw.replace(/[()]/g,'').trim().toUpperCase();
+  if (s.includes('ANYTIME') || s === '') return null;
+  // Take the first time (before any slash)
+  const first = s.split('/')[0].trim();
+  // Match patterns like 11A, 1:30P, 12:25P, 9A
+  const m = first.match(/^(\d{1,2})(?::(\d{2}))?([AP])/);
+  if (!m) return null;
+  return { h: parseInt(m[1]), m: parseInt(m[2] || '0'), p: m[3] };
+}
+
+// Parse hop name — extract subtitle for National Holiday entries
+// e.g. "NATIONAL HOLIDAY - POPCORN LOVERS DAY" → name="National Holiday", sub="Popcorn Lovers Day"
+function parseHopName(raw) {
+  if (!raw) return { name: '', sub: null };
+  const s = raw.trim();
+  // Title case helper
+  const tc = str => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  if (s.toUpperCase().startsWith('NATIONAL HOLIDAY')) {
+    const parts = s.split(/\s*[-\u2013]\s*/);
+    const sub = parts.length > 1 ? tc(parts.slice(1).join(' - ')) : null;
+    return { name: 'National Holiday', sub };
+  }
+  return { name: tc(s), sub: null };
+}
+
+// Fetch a sheet range and return rows as arrays
+async function fetchRange(tabName, range) {
+  const url = `${SHEETS_API}/${SHEET_ID}/values/${encodeURIComponent(tabName + '!' + range)}?key=AIzaSyD-placeholder`;
+  // Note: for publicly shared sheets we don't actually need an API key for basic reads
+  // We use the export/gviz approach instead which works without any key
+  const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
+  const resp = await fetch(gvizUrl);
+  if (!resp.ok) throw new Error('Failed to fetch sheet: ' + tabName);
+  const csv = await resp.text();
+  return parseCSV(csv);
+}
+
+function parseCSV(csv) {
+  const rows = [];
+  const lines = csv.split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let inQuote = false, cell = '';
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i+1] === '"') { cell += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (ch === ',' && !inQuote) {
+        row.push(cell.trim()); cell = '';
+      } else {
+        cell += ch;
+      }
+    }
+    row.push(cell.trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+// Get current month tab name — tries APRIL_2026 format
+function currentMonthTab() {
+  const MONTH_UPPER = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE",
+    "JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+  return MONTH_UPPER[vMonth] + '_' + vYear;
+}
+
+async function loadFromSheets() {
+  try {
+    showLoadingState(true);
+
+    // ── Load HOP_MASTER tab ──
+    const masterRows = await fetchRange('HOP_MASTER', 'A:F');
+    ALL_HOPS = [];
+    HOP_INFO = {};
+    HOP_TASKS = {};
+
+    // Skip header row
+    for (let i = 1; i < masterRows.length; i++) {
+      const row = masterRows[i];
+      const name = (row[0] || '').trim();
+      const desc = (row[1] || '').trim();
+      const dm   = (row[2] || '').trim();
+      const tasks = (row[3] || '').trim(); // e.g. "" = all, "[]" = none, "1,2,3,4,5,6" = no roll call
+      if (!name) continue;
+      ALL_HOPS.push(name);
+      HOP_INFO[name] = { desc, dm };
+      if (tasks === '[]') {
+        HOP_TASKS[name] = [];
+      } else if (tasks && tasks !== '') {
+        HOP_TASKS[name] = tasks.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+      }
+      // if tasks is blank, no entry in HOP_TASKS → defaults to all 7
+    }
+
+    // ── Load current month schedule tab ──
+    const tab = currentMonthTab();
+    let schedRows;
+    try {
+      schedRows = await fetchRange(tab, 'A:E');
+    } catch(e) {
+      // Month tab not found — use static schedule only (no National Holidays)
+      DYNAMIC_HOP_DATES = [];
+      dataLoaded = true;
+      showLoadingState(false);
+      render();
+      return;
+    }
+
+    DYNAMIC_HOP_DATES = [];
+    // Sheet monthly tab only contains National Holiday entries for 2026
+    // All other hops are calculated from SCHEDULE_2026
+    // Columns: A=Day, B=Hop Name, C=Time (ET), D=Subtitle
+    for (let i = 1; i < schedRows.length; i++) {
+      const row = schedRows[i];
+      const day = parseInt(row[0]);
+      if (isNaN(day) || day < 1) continue;
+      const rawName = (row[1] || '').trim();
+      if (!rawName) continue;
+      const { name, sub: autoSub } = parseHopName(rawName);
+      const sub = (row[3] || '').trim() || autoSub || null;
+      const et = parseTimeStr(row[2] || '');
+      DYNAMIC_HOP_DATES.push({ day, name, et, sub });
+    }
+
+    dataLoaded = true;
+    dataError = false;
+    showLoadingState(false);
+    render();
+
+  } catch(err) {
+    console.error('Sheet load error:', err);
+    // Fall back to static schedule — app still works without sheet connection
+    // Sheet is only needed for National Holidays and new hops
+    dataLoaded = true;
+    dataError = false;
+    DYNAMIC_HOP_DATES = [];
+    showLoadingState(false);
+    render();
+  }
+}
+
+function showLoadingState(loading) {
+  const view = document.getElementById('view');
+  if (!view) return;
+  if (loading) {
+    view.innerHTML = `<div style="text-align:center;padding:3rem 1rem;">
+      <div style="font-size:32px;margin-bottom:12px;">&#127912;</div>
+      <div style="font-size:14px;color:#7b2fbe;font-weight:500;">Loading hops...</div>
+      <div style="font-size:12px;color:#9d6bbf;margin-top:6px;">Fetching from Google Sheets</div>
+    </div>`;
+  }
+}
+
+function renderError() {
+  const view = document.getElementById('view');
+  if (!view) return;
+  view.innerHTML = `<div style="text-align:center;padding:2rem 1rem;">
+    <div style="font-size:32px;margin-bottom:12px;">&#9888;</div>
+    <div style="font-size:14px;color:#c2185b;font-weight:500;margin-bottom:8px;">Couldn't load hop data</div>
+    <div style="font-size:12px;color:#666;margin-bottom:16px;line-height:1.6;">Check your internet connection and try again. If the problem persists the sheet may need to be made public.</div>
+    <button onclick="loadFromSheets()" style="background:#4B0082;color:white;border:none;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;">Try again</button>
+  </div>`;
+}
+
+function getTasksForHop(n) {
+  return HOP_TASKS[n] !== undefined ? HOP_TASKS[n] : [0,1,2,3,4,5,6];
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FULL YEAR SCHEDULE — April through December 2026
+// National Holidays added monthly via Google Sheet
+// ═══════════════════════════════════════════════════════════════
+const SCHEDULE_2026 = {
+  3: [
+    {day:1,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:1,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:1,name:"Ramadan/Eid",et:{h:12,m:0,p:'P'}},
+    {day:1,name:"Sharing Sunday",et:null},
+    {day:2,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:3,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:3,name:"National Holiday",et:{h:1,m:30,p:'P'},sub:"Organize Your Home Office Day"},
+    {day:4,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:4,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:5,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:6,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:6,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:6,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:7,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:7,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:8,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:8,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:8,name:"National Holiday",et:{h:1,m:30,p:'P'},sub:"Retro Video Games Day"},
+    {day:8,name:"Sharing Sunday",et:null},
+    {day:9,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:9,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:9,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:10,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:10,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:10,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:11,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:12,name:"National Holiday",et:{h:1,m:30,p:'P'},sub:"Popcorn Lovers Day"},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:12,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:13,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:13,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:14,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:14,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:15,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:15,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:15,name:"Sharing Sunday",et:null},
+    {day:16,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:16,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:17,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:17,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:18,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:18,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:20,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:20,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:21,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:21,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:21,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:21,name:"National Holiday",et:{h:1,m:30,p:'P'},sub:"International Day Of The Forest"},
+    {day:22,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:22,name:"Sharing Sunday",et:null},
+    {day:23,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:23,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:23,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:24,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:24,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:25,name:"National Holiday",et:{h:1,m:30,p:'P'},sub:"Cherry Blossom Festival"},
+    {day:25,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:26,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:26,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:27,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:28,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:29,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:29,name:"Sharing Sunday",et:null},
+    {day:30,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:30,name:"National Holiday",et:{h:1,m:30,p:'P'},sub:"Take A Walk In The Park Day"},
+    {day:31,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+  ],
+
+  4: [
+    {day:1,name:"National Greeting Card Day",et:{h:11,m:30,p:'A'}},
+    {day:1,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:1,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:2,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:2,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:3,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:3,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:3,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:4,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:4,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:5,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:5,name:"Sharing Sunday",et:null},
+    {day:6,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:7,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:7,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:8,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:9,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:9,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:10,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:10,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:11,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:11,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:12,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:12,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Sharing Sunday",et:null},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:13,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:14,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:14,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:15,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:15,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:17,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:17,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:17,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:18,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:18,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:18,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:19,name:"Sharing Sunday",et:null},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:20,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:21,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:21,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:21,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:22,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:23,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:23,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:24,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:25,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:25,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:26,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:26,name:"Sharing Sunday",et:null},
+    {day:27,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:27,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:28,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:29,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:30,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+    {day:30,name:"This or That",et:{h:10,m:0,p:'A'}},
+  ],
+  5: [
+    {day:1,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:1,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:1,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:2,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:2,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:3,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:3,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:3,name:"Sharing Sunday",et:null},
+    {day:4,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:5,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:6,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:7,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:7,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:8,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:8,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:9,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:9,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:10,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:10,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:10,name:"Sharing Sunday",et:null},
+    {day:11,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:11,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:11,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:12,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:12,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:13,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:13,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:14,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:14,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:15,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:15,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:15,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:16,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:16,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:17,name:"Sharing Sunday",et:null},
+    {day:18,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:18,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:19,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:19,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:19,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:20,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:21,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:21,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:22,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:23,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:24,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:24,name:"Sharing Sunday",et:null},
+    {day:25,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:25,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:25,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:26,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:27,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:28,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:29,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:29,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:30,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:30,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:31,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:31,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+    {day:31,name:"Sharing Sunday",et:null},
+  ],
+  6: [
+    {day:1,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:2,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:2,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:3,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:4,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:4,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:5,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:5,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:6,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:7,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:7,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:7,name:"Sharing Sunday",et:null},
+    {day:8,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:8,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:8,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:9,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:9,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:10,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:10,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:11,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:11,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:12,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:12,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:12,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:13,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:13,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:13,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:14,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:14,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:14,name:"Sharing Sunday",et:null},
+    {day:15,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:15,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:16,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:16,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:16,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:17,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:18,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:18,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:19,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:19,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:20,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:21,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:21,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:21,name:"Sharing Sunday",et:null},
+    {day:22,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:22,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:22,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:23,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:24,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:24,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:25,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:25,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:26,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:26,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:27,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:28,name:"Sharing Sunday",et:null},
+    {day:29,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:30,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+    {day:30,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+  ],
+  7: [
+    {day:1,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:2,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:2,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:3,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:3,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:4,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:5,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:5,name:"Sharing Sunday",et:null},
+    {day:6,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:7,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:8,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:8,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:9,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:9,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:10,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:10,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:10,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:11,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:11,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:11,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:12,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:12,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Sharing Sunday",et:null},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:13,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:14,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:14,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:14,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:15,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:17,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:17,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:18,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:18,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:19,name:"Sharing Sunday",et:null},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:20,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:21,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:21,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:22,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:22,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:23,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:23,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:24,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:24,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:25,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:25,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:25,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:26,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:26,name:"Sharing Sunday",et:null},
+    {day:27,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:27,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:28,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:30,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:31,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:31,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+  ],
+  8: [
+    {day:1,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:2,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:2,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:2,name:"Sharing Sunday",et:null},
+    {day:3,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:4,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:5,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:6,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:6,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:7,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:7,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:7,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:8,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:8,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:8,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:9,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:9,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:9,name:"Sharing Sunday",et:null},
+    {day:10,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:10,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:10,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:11,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:11,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:11,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:12,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:13,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:13,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:14,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:14,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:15,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:15,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:16,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:16,name:"Sharing Sunday",et:null},
+    {day:17,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:17,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:18,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:18,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:19,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:19,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:20,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:21,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:21,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:21,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:22,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:22,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:23,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:23,name:"Sharing Sunday",et:null},
+    {day:24,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:24,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:24,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:25,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:25,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:26,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:27,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:27,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:28,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:29,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:30,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:30,name:"Sharing Sunday",et:null},
+    {day:31,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:31,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+  ],
+  9: [
+    {day:1,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:2,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:2,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:3,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:3,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:4,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:4,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:4,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:5,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:6,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:6,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:6,name:"Sharing Sunday",et:null},
+    {day:7,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:8,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:8,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:8,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:9,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:10,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:10,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:11,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:11,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:12,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:13,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:13,name:"Sharing Sunday",et:null},
+    {day:14,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:14,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:14,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:15,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:15,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:16,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:16,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:18,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:18,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:18,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:19,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:19,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:20,name:"Sharing Sunday",et:null},
+    {day:21,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:21,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:22,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:22,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:23,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:24,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:24,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:25,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:26,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:26,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:27,name:"Sharing Sunday",et:null},
+    {day:28,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:28,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:30,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:30,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+  ],
+  10: [
+    {day:1,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:1,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:2,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:2,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:2,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:3,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:3,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:4,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:4,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:4,name:"Sharing Sunday",et:null},
+    {day:5,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:6,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:6,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:7,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:8,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:8,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:9,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:9,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:10,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:10,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:11,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:11,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:11,name:"Sharing Sunday",et:null},
+    {day:12,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:12,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:12,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:13,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:14,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:14,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:15,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:15,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:16,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:16,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:16,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:17,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:17,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:18,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:18,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:18,name:"Sharing Sunday",et:null},
+    {day:19,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:19,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:20,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:20,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:21,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:22,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:22,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:23,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:24,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:25,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:25,name:"Sharing Sunday",et:null},
+    {day:26,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:26,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:26,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:27,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:28,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:29,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:30,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:30,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:31,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:31,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+    {day:31,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+  ],
+  11: [
+    {day:1,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:1,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:1,name:"Sharing Sunday",et:null},
+    {day:2,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:3,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:3,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:4,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:5,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:6,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:6,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:7,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:8,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:8,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:8,name:"Sharing Sunday",et:null},
+    {day:9,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:9,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:9,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:10,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:10,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:11,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:11,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:12,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:13,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:13,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:13,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:14,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:14,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:14,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:15,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:15,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:15,name:"Sharing Sunday",et:null},
+    {day:16,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:16,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:17,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:17,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:17,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:18,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:20,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:21,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:21,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:22,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:22,name:"Sharing Sunday",et:null},
+    {day:23,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:23,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:23,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:24,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:25,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:25,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:26,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:26,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:27,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:27,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:28,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:28,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:29,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:29,name:"Sharing Sunday",et:null},
+    {day:30,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:30,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+  ],
+  12: [
+    {day:1,name:"Just for Giggles",et:{h:1,m:0,p:'P'}},
+    {day:1,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:2,name:"Mini Slimline Hop",et:{h:9,m:0,p:'A'}},
+    {day:3,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:3,name:"Watercolor Wonder",et:{h:11,m:0,p:'A'}},
+    {day:4,name:"Build Your Stash – Everyday Occasions",et:{h:1,m:0,p:'P'}},
+    {day:4,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:5,name:"Gorgeous Gift Tags",et:{h:2,m:0,p:'P'}},
+    {day:5,name:"Odd Holidays",et:{h:12,m:0,p:'P'}},
+    {day:6,name:"Fantasy Inspired Design",et:{h:11,m:0,p:'A'}},
+    {day:6,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:6,name:"Sharing Sunday",et:null},
+    {day:7,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:8,name:"Shaker Makers",et:{h:10,m:0,p:'A'}},
+    {day:8,name:"The Crafty Spotlight",et:{h:12,m:0,p:'P'}},
+    {day:9,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:9,name:"White on White",et:{h:12,m:0,p:'P'}},
+    {day:10,name:"Clean & Simple (CAS)",et:{h:1,m:0,p:'P'}},
+    {day:10,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:11,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:11,name:"Sending Sunshine",et:{h:1,m:0,p:'P'}},
+    {day:11,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:12,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:12,name:"CASE IT",et:{h:12,m:0,p:'P'}},
+    {day:12,name:"Caroling Christmas",et:{h:12,m:25,p:'P'}},
+    {day:12,name:"Stencil Fun",et:{h:2,m:0,p:'P'}},
+    {day:13,name:"Cardmaking YouTube",et:{h:3,m:0,p:'P'}},
+    {day:13,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:13,name:"Sharing Sunday",et:null},
+    {day:14,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:14,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:14,name:"ProCRAFTinator's Club",et:{h:11,m:0,p:'A'}},
+    {day:15,name:"ATC Scrapmakes",et:{h:8,m:0,p:'A'}},
+    {day:15,name:"Fans of SSS",et:{h:12,m:0,p:'P'}},
+    {day:15,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:16,name:"Postage Party Hop",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"Tags & Techniques",et:{h:3,m:0,p:'P'}},
+    {day:17,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:18,name:"Fandom Friday",et:{h:6,m:0,p:'P'}},
+    {day:18,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:19,name:"Create 3 Ways",et:{h:3,m:0,p:'P'}},
+    {day:19,name:"Fans of Taylored Expressions",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"Crushing Christmas Cards",et:{h:11,m:0,p:'A'}},
+    {day:20,name:"Gifted",et:{h:3,m:0,p:'P'}},
+    {day:20,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:20,name:"Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:20,name:"Sharing Sunday",et:null},
+    {day:21,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:21,name:"Just One Color",et:{h:1,m:0,p:'P'}},
+    {day:22,name:"Birthday Bash",et:{h:3,m:30,p:'P'}},
+    {day:23,name:"Card Clubhouse",et:{h:11,m:0,p:'A'}},
+    {day:23,name:"Rainbow Connection",et:{h:1,m:0,p:'P'}},
+    {day:24,name:"Doodle the Possibilities",et:{h:2,m:0,p:'P'}},
+    {day:24,name:"This or That",et:{h:10,m:0,p:'A'}},
+    {day:25,name:"Friends in Faith",et:{h:5,m:0,p:'P'}},
+    {day:25,name:"Themed Friday Fun",et:{h:11,m:0,p:'A'}},
+    {day:26,name:"#ForTheLoveOfLawnFawnDies",et:{h:11,m:0,p:'A'}},
+    {day:26,name:"Cube & Create",et:{h:1,m:0,p:'P'}},
+    {day:26,name:"Rediscover Your Supplies",et:{h:11,m:0,p:'A'}},
+    {day:27,name:"My Favorite",et:{h:12,m:0,p:'P'}},
+    {day:27,name:"Sharing Sunday",et:null},
+    {day:28,name:"An Encouraging Word",et:{h:2,m:0,p:'P'}},
+    {day:28,name:"Embossing Folder Hop",et:{h:11,m:0,p:'A'}},
+    {day:28,name:"Fun on the Farm",et:{h:8,m:0,p:'P'}},
+    {day:28,name:"More Patterned Paper",et:{h:2,m:0,p:'P'}},
+    {day:29,name:"Stashbusters",et:{h:7,m:0,p:'P'}},
+    {day:31,name:"One Layer Cards",et:{h:4,m:0,p:'P'}},
+    {day:31,name:"This or That",et:{h:10,m:0,p:'A'}},
+  ],
+};
+
+// Returns hop dates for current month, merging static schedule with
+// any National Holiday entries loaded from Google Sheet
+let DYNAMIC_HOP_DATES = [];
+
+function getHopDates(year, month) {
+  if (year !== 2026) return DYNAMIC_HOP_DATES;
+  // month is already 1-indexed (callers pass vMonth+1 or realMonth+1)
+  const base = SCHEDULE_2026[month] || [];
+  // Merge ALL sheet hops — National Holidays, new hops, anything in the monthly tab
+  return [...base, ...DYNAMIC_HOP_DATES].sort((a,b) => a.day - b.day || a.name.localeCompare(b.name));
+}
+
+// ═══════════════════════════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════════════════════════
+const TZ_LABELS = { "-5":"ET","-6":"CT","-7":"MT","-8":"PT","-9":"AKT","-10":"HST","0":"GMT","1":"CET","2":"EET","3":"UTC+3","5.5":"IST","8":"UTC+8","9":"JST","10":"AEST","11":"NZST" };
+const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+//
+// STORAGE DESIGN:
+//   joined      → { "Hop Name": true }  — keyed by hop name ONLY, no month.
+//                  Joining carries forward across all months permanently.
+//
+//   tasksDone   → { "YYYY-M-D|name::sub###taskIdx": true }
+//                  Keyed by year+month+day+hop, so tasks reset fresh each month.
+//
+//   notes       → { "YYYY-M|name::sub": "text" }
+//                  Keyed by year+month+hop (not day), so one note per hop per month.
+//                  Notes are kept forever — flipping back to March shows March notes.
+//
+//   userTZ, vYear, vMonth — persisted so the app reopens where you left off.
+// ═══════════════════════════════════════════════════════════════
+let vYear = 2026, vMonth = 2;
+let joined = {}, tasksDone = {}, notes = {}, expanded = {}, infoExpanded = {}, infoOpen = {};
+let activeTab = 'hops', userTZ = -5, showPast = false;
+
+function saveState() {
+  try {
+    localStorage.setItem('hop_joined',  JSON.stringify(joined));
+    localStorage.setItem('hop_tasks',   JSON.stringify(tasksDone));
+    localStorage.setItem('hop_notes',   JSON.stringify(notes));
+    localStorage.setItem('hop_tz',      String(userTZ));
+    localStorage.setItem('hop_year',    String(vYear));
+    localStorage.setItem('hop_month',   String(vMonth));
+  } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const j  = localStorage.getItem('hop_joined');
+    const t  = localStorage.getItem('hop_tasks');
+    const n  = localStorage.getItem('hop_notes');
+    const tz = localStorage.getItem('hop_tz');
+    const yr = localStorage.getItem('hop_year');
+    const mo = localStorage.getItem('hop_month');
+    if (j)  joined    = JSON.parse(j);
+    if (t)  tasksDone = JSON.parse(t);
+    if (n)  notes     = JSON.parse(n);
+    if (tz) userTZ    = parseFloat(tz);
+    if (yr) vYear     = parseInt(yr);
+    if (mo) vMonth    = parseInt(mo);
+    return !!tz; // true = TZ was previously set → skip welcome screen
+  } catch(e) { return false; }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+function convertTime(et) {
+  if (!et) return "Anytime";
+  let h = et.h;
+  if (et.p === 'P' && h !== 12) h += 12;
+  if (et.p === 'A' && h === 12) h = 0;
+  let utc = h + 5 + et.m / 60;
+  let local = ((utc + userTZ) % 24 + 24) % 24;
+  const lh = Math.floor(local);
+  const lm = Math.round((local - lh) * 60);
+  const ampm = lh >= 12 ? 'P' : 'A';
+  const displayH = lh % 12 || 12;
+  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const minStr = lm > 0 ? ':' + String(lm).padStart(2,'0') : '';
+  return `${displayH}${minStr}${ampm} ${tzLabel}`;
+}
+
+// Task key — includes day, so tasks are per-occurrence and reset fresh each month
+function okey(day, name, sub) { return `${vYear}-${vMonth}-${day}|${name}${sub ? '::' + sub : ''}`; }
+function tkey(ok, i) { return ok + '###' + i; }
+// Notes key — month-scoped only (not day), so one note per hop per month, kept forever
+function nkey(name, sub) { return `${vYear}-${vMonth}|${name}${sub ? '::' + sub : ''}`; }
+function safe(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+function isDatePast(day) {
+  const t = new Date();
+  if (vYear < t.getFullYear()) return true;
+  if (vYear > t.getFullYear()) return false;
+  if (vMonth < t.getMonth()) return true;
+  if (vMonth > t.getMonth()) return false;
+  return day < t.getDate();
+}
+function isToday(day) {
+  const t = new Date();
+  return vYear === t.getFullYear() && vMonth === t.getMonth() && day === t.getDate();
+}
+
+function parseDMs(s) {
+  return s.split(/\s*(?:,|or|and)\s*/i).map(x => x.trim()).filter(x => x.startsWith('@'))
+    .map(x => { const h = x.replace(/^@/,''); return { handle:'@'+h, url:`https://instagram.com/${h}` }; });
+}
+function buildDMLinks(s, small) {
+  const d = parseDMs(s);
+  const cls = small ? 'dm-link-sm' : 'dm-link';
+  const wrap = small ? 'dm-links-sm' : 'dm-links';
+  if (!d.length) return `<span style="font-size:12px;color:#666;">${s}</span>`;
+  return `<div class="${wrap}">${d.map(h => `<a class="${cls}" href="${h.url}" target="_blank">DM ${h.handle}</a>`).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ACTIONS
+// ═══════════════════════════════════════════════════════════════
+function saveTZ() {
+  userTZ = parseFloat(document.getElementById('tz-select').value);
+  saveState();
+  document.getElementById('tz-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  render();
+  // Silently fetch National Holidays in background
+  loadNationalHolidays();
+}
+
+function changeTZ() {
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('tz-screen').style.display = 'block';
+}
+
+function changeMonth(d) {
+  vMonth += d;
+  if (vMonth > 11) { vMonth = 0; vYear++; }
+  if (vMonth < 0) { vMonth = 11; vYear--; }
+  showPast = false;
+  dataLoaded = false;
+  saveState();
+  render();
+  // Fetch National Holidays for the new month in background
+  loadNationalHolidays();
+}
+
+function setTab(t) {
+  activeTab = t;
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  const el = document.getElementById('tab-' + t);
+  if (el) el.classList.add('active');
+  render();
+}
+
+function toggleJoin(name) {
+  joined[name] = !joined[name];
+  saveState();
+  render();
+}
+
+function toggleExpand(ok) {
+  expanded[ok] = !expanded[ok];
+  render();
+}
+
+function toggleTask(ok, i) {
+  tasksDone[tkey(ok, i)] = !tasksDone[tkey(ok, i)];
+  saveState();
+  render();
+}
+
+function saveNote(ok, val) {
+  notes[ok] = val;
+  saveState();
+}
+
+function toggleShowPast() {
+  showPast = !showPast;
+  render();
+}
+
+function toggleInfoExpand(key) {
+  infoExpanded[key] = !infoExpanded[key];
+  render();
+}
+
+function toggleInfoOpen(ok) {
+  infoOpen[ok] = !infoOpen[ok];
+  render();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════
+function renderSummary() {
+  // ALL stats locked to real current month — browsing other months doesn't change stats
+  const today = new Date();
+  const realYear = today.getFullYear();
+  const realMonth = today.getMonth(); // 0-based
+  const realMonthName = MONTH_NAMES[realMonth];
+
+  const myHops = ALL_HOPS.filter(n => joined[n]).length;
+
+  // All three stats use real current month dates
+  const realMonthDates = getHopDates(realYear, realMonth + 1);
+  const myProjects = realMonthDates.filter(h => joined[h.name]).length;
+
+  const rollCallDone = realMonthDates.filter(h => {
+    if (!joined[h.name]) return false;
+    const tasks = getTasksForHop(h.name);
+    if (!tasks.includes(0)) return false;
+    return !!tasksDone[tkey(okey(h.day,h.name,h.sub), 0)];
+  }).length;
+  const rollCallTotal = realMonthDates.filter(h => {
+    if (!joined[h.name]) return false;
+    return getTasksForHop(h.name).includes(0);
+  }).length;
+
+  document.getElementById('summary-bar').innerHTML = `
+    <div style="width:100%;font-size:11px;font-weight:500;color:#7b2fbe;margin-bottom:5px;padding:0 2px;">
+      📅 Stats for ${realMonthName} ${realYear}
+    </div>
+    <div class="chip"><span>${myHops}/${ALL_HOPS.length}</span># of Hops Joined</div>
+    <div class="chip"><span>${myProjects}</span>Projects This Month</div>
+    <div class="chip"><span>${rollCallDone}/${rollCallTotal}</span>Roll Calls Committed To</div>`;
+}
+
+// How many days ahead to show in the "Coming up" banner
+const COMING_UP_DAYS = 3;
+
+function renderNextUp() {
+  // Always use real current date — not the browsed month
+  // Use local date explicitly — set to noon to avoid DST/midnight boundary issues
+  const _now = new Date();
+  const realYear = _now.getFullYear();
+  const realMonth = _now.getMonth();
+  const realDay = _now.getDate();
+  // Use noon (12:00) to avoid any midnight DST boundary problems
+  const todayMs = new Date(realYear, realMonth, realDay, 12, 0, 0).getTime();
+  const cutoffMs = new Date(realYear, realMonth, realDay + COMING_UP_DAYS, 12, 0, 0).getTime();
+  const currentMonthDates = getHopDates(realYear, realMonth + 1).filter(h => joined[h.name]);
+  if (!currentMonthDates.length) return '';
+  const byDay = {};
+  currentMonthDates.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
+  // Get days from today onward within the next COMING_UP_DAYS days
+  // Filter to days within the next COMING_UP_DAYS calendar days from today
+  const allFutureDays = Object.keys(byDay).map(Number).sort((a,b) => a-b)
+    .filter(d => {
+      const dayDate = new Date(realYear, realMonth, d, 12, 0, 0);
+      const diff = Math.round((dayDate - todayMs) / (1000*60*60*24));
+      return diff >= 0 && diff < COMING_UP_DAYS;
+    });
+  if (!allFutureDays.length) return '';
+  const windowDays = allFutureDays;
+  const mn = MONTH_NAMES[realMonth];
+  const sections = windowDays.map(day => {
+    const wd = DAY_NAMES[new Date(realYear,realMonth,day).getDay()];
+    const hops = byDay[day];
+    const hopItems = hops.map(h => {
+      const t = convertTime(h.et);
+      const label = h.sub ? h.sub : h.name;
+      return `<div style="font-size:12px;color:#004D40;line-height:1.55;"><strong>${label}</strong> <span style="color:#00838F;font-size:11px;">${t}</span></div>`;
+    }).join('');
+    return `<div style="margin-bottom:6px;">
+      <div style="font-size:10px;font-weight:500;color:#00838F;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:3px;">${wd} ${mn} ${day}</div>
+      ${hopItems}
+    </div>`;
+  }).join('');
+  const title = windowDays.length === 1
+    ? `Coming up next`
+    : `Coming up — next ${COMING_UP_DAYS} days`;
+  return `<div style="background:rgba(224,247,250,0.97);border:1.5px solid #00ACC1;border-radius:12px;padding:9px 13px;margin-bottom:0.75rem;display:flex;align-items:flex-start;gap:9px;">
+    <div style="font-size:20px;line-height:1;flex-shrink:0;">&#127912;</div>
+    <div style="flex:1;">
+      <div style="font-size:10px;font-weight:500;color:#006064;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">${title}</div>
+      ${sections}
+    </div>
+  </div>`;
+}
+
+function renderLegend() {
+  return `<div class="task-legend">${ALL_TASKS.map((t,i) =>
+    `<div class="legend-pill" style="background:${TASK_COLORS[i].bg};color:${TASK_COLORS[i].text};">${t.label}</div>`
+  ).join('')}</div>`;
+}
+
+function buildHopCard(h, isPast) {
+  const ok = okey(h.day, h.name, h.sub);   // day-scoped: for tasks (reset each month)
+  const nk = nkey(h.name, h.sub);           // month-scoped: for notes (kept forever)
+  const isOpen = !!expanded[ok];
+  const isInfoOpen = !!infoOpen[ok];
+  const taskIndices = getTasksForHop(h.name);
+  const doneCount = taskIndices.filter(i => tasksDone[tkey(ok,i)]).length;
+  const safeOk = safe(ok);
+  const safeNk = safe(nk);
+  const timeStr = convertTime(h.et);
+  const info = HOP_INFO[h.name];
+
+  const infoPanel = isInfoOpen && info ? `<div class="hop-info-panel">
+    <div class="hop-info-graphic">Hop graphic — coming once connected to Google Drive</div>
+    <div class="hop-info-desc">${info.desc}</div>
+    ${buildDMLinks(info.dm, true)}
+  </div>` : '';
+
+  const taskPanel = isOpen ? `<div class="hop-tasks">
+    ${taskIndices.map(i => {
+      const done = !!tasksDone[tkey(ok,i)];
+      return `<div class="task-row ${done ? 'c'+i : ''}">
+        <button class="task-chk ${done ? 'd'+i : ''}" onclick="event.stopPropagation();toggleTask('${safeOk}',${i})">${done ? '✓' : ''}</button>
+        <span class="task-lbl">${ALL_TASKS[i].label}</span>
+      </div>`;
+    }).join('')}
+    <div class="notes-wrap">
+      <div class="notes-lbl">Notes</div>
+      <textarea class="notes-ta" placeholder="Add notes for ${MONTH_NAMES[vMonth]}…" onclick="event.stopPropagation()" oninput="saveNote('${safeNk}',this.value)">${notes[nk] || ''}</textarea>
+    </div>
+  </div>` : '';
+
+  return `<div class="hop-card ${isPast ? 'past-card' : ''}">
+    <div class="hop-card-top" onclick="toggleExpand('${safeOk}')">
+      <div style="flex:1;min-width:0;">
+        <div class="hop-card-name">${h.name}</div>
+        ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : ''}
+      </div>
+      <div class="hop-card-meta">
+        ${doneCount > 0 ? `<span class="hop-prog">${doneCount}/${taskIndices.length}</span>` : ''}
+        <span class="hop-time">${timeStr}</span>
+        <button class="hop-info-pill ${isInfoOpen ? 'active' : ''}" onclick="event.stopPropagation();toggleInfoOpen('${safeOk}')">${isInfoOpen ? 'Hide info' : 'Info'}</button>
+        <span class="expand-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
+      </div>
+    </div>
+    ${infoPanel}
+    ${taskPanel}
+  </div>`;
+}
+
+function renderHops() {
+  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const mn = MONTH_NAMES[vMonth];
+  let html = `<div class="hint-box">
+    <div class="hint-step"><div class="hint-num">1</div><div class="hint-text">Select the hops you have joined for <strong>${mn}</strong> by tapping the circle next to each one.</div></div>
+    <div class="hint-step"><div class="hint-num">2</div><div class="hint-text">Your selected hops appear in the <strong>Schedule</strong> tab sorted by date, with a task checklist for each occurrence.</div></div>
+    <div class="hint-step"><div class="hint-num">3</div><div class="hint-text">The <strong>Calendar</strong> and <strong>Hop Info</strong> tabs show all hops — yours highlighted in purple.</div></div>
+    <div style="font-size:11px;color:#9d6bbf;margin-top:8px;">Times shown in <strong>${tzLabel}</strong>. <span class="tz-badge" onclick="changeTZ()">&#9998; Change time zone</span></div>
+  </div><div class="section-card">`;
+
+  html += ALL_HOPS.map(name => {
+    const on = !!joined[name];
+    // Use full hop dates for current month including sheet-loaded holidays
+    const occ = getHopDates(vYear, vMonth + 1).filter(h => h.name === name).length;
+    const taskCount = getTasksForHop(name).length;
+    const safeName = safe(name);
+    const infoKey = 'join_' + name;
+    const safeInfoKey = safe(infoKey);
+    return `<div class="join-item">
+      <div class="join-circle ${on ? 'on' : ''}" onclick="toggleJoin('${safeName}')">✓</div>
+      <div class="join-name-wrap" onclick="toggleJoin('${safeName}')">
+        <div class="join-name ${on ? 'on' : ''}">${name}</div>
+        <div class="join-occ">${occ} occurrence${occ !== 1 ? 's' : ''} &nbsp;·&nbsp; ${taskCount} tasks</div>
+      </div>
+      <button class="join-info-btn" onclick="event.stopPropagation();toggleInfoExpand('${safeInfoKey}')">${infoExpanded[infoKey] ? 'Hide' : 'Info'}</button>
+    </div>
+    ${infoExpanded[infoKey] && HOP_INFO[name] ? `<div class="join-info-inline">
+      <div class="join-info-inline-desc">${HOP_INFO[name].desc}</div>
+      ${buildDMLinks(HOP_INFO[name].dm, true)}
+    </div>` : ''}`;
+  }).join('');
+
+  return html + '</div>';
+}
+
+function renderSchedule() {
+  const mn = MONTH_NAMES[vMonth];
+  const myDates = HOP_DATES.filter(h => joined[h.name]);
+  if (!myDates.length) return `<div class="hint-box"><div class="hint-step"><div class="hint-num">!</div><div class="hint-text">You haven't selected any hops for <strong>${mn}</strong> yet. Go to <strong>My Hops</strong> and tap the circle next to each hop you've joined.</div></div></div>`;
+
+  const byDay = {};
+  myDates.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
+  const days = Object.keys(byDay).map(Number).sort((a,b) => a-b);
+  const pastDays = days.filter(d => isDatePast(d));
+  const futureDays = days.filter(d => !isDatePast(d));
+  const pastHopCount = pastDays.reduce((s,d) => s + byDay[d].length, 0);
+
+  let html = renderLegend() + renderNextUp();
+
+  if (pastDays.length) {
+    html += `<div class="past-toggle" onclick="toggleShowPast()">
+      <span class="past-icon ${showPast ? 'open' : ''}">&#9655;</span>
+      <span class="past-label">${showPast ? 'Hide' : 'Show'} past dates</span>
+      <span class="past-count">${pastDays.length} days &nbsp;·&nbsp; ${pastHopCount} hops</span>
+    </div>`;
+    if (showPast) {
+      html += pastDays.map(day => {
+        const wd = new Date(vYear,vMonth,day).getDay();
+        return `<div class="day-group"><div class="day-header past-hdr">${DAY_NAMES[wd]}, ${mn} ${day}</div>${byDay[day].map(h => buildHopCard(h,true)).join('')}</div>`;
+      }).join('');
+    }
+  }
+
+  if (!futureDays.length) {
+    html += `<div class="empty-state" style="padding:1rem;">No upcoming hops this month.</div>`;
+  } else {
+    html += futureDays.map(day => {
+      const wd = new Date(vYear,vMonth,day).getDay();
+      const today = isToday(day);
+      return `<div class="day-group">
+        <div class="day-header ${today ? 'today-hdr' : ''}">${today ? '★ TODAY — ' : ''}${DAY_NAMES[wd]}, ${mn} ${day}</div>
+        ${byDay[day].map(h => buildHopCard(h,false)).join('')}
+      </div>`;
+    }).join('');
+  }
+  return html;
+}
+
+function renderCalendar() {
+  const firstDay = new Date(vYear,vMonth,1).getDay();
+  const daysInMonth = new Date(vYear,vMonth+1,0).getDate();
+  const byDay = {};
+  HOP_DATES.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
+  const today = new Date();
+  const isCurrent = today.getFullYear() === vYear && today.getMonth() === vMonth;
+  let cells = '';
+  for (let i = 0; i < firstDay; i++) cells += `<div class="vcal-cell"></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isPast = isDatePast(d);
+    const todayDay = isCurrent && today.getDate() === d;
+    const hops = byDay[d] || [];
+    const numEl = todayDay
+      ? `<div class="vcal-num today">${d}</div>`
+      : `<div class="vcal-num">${d}</div>`;
+    const hopEls = hops.map(h => {
+      const isJoined = !!joined[h.name];
+      const timeStr = convertTime(h.et);
+      const label = h.sub ? `${h.sub} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      return `<div class="vcal-hop ${isJoined ? 'joined' : ''}">${label}</div>`;
+    }).join('');
+    cells += `<div class="vcal-cell ${isPast && !todayDay ? 'past-cell' : ''}">${numEl}${hopEls}</div>`;
+  }
+  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  return `<div class="cal-hint">All hops for the month — <strong style="color:#4B0082;">yours in purple</strong>. Past days dimmed. Times in <strong>${tzLabel}</strong>. Updates automatically when hops are added.</div>
+  <div class="vcal-wrap">
+    <div class="vcal-hdr">${DAY_SHORT.map(d => `<div class="vcal-dn">${d}</div>`).join('')}</div>
+    <div class="vcal-cells">${cells}</div>
+  </div>`;
+}
+
+function renderInfo() {
+  let html = `<p class="info-intro">Tap any hop to see its full description and how to join on Instagram.</p>`;
+  html += ALL_HOPS.map(name => {
+    const info = HOP_INFO[name];
+    const key = 'info_' + name;
+    const safeKey = safe(key);
+    const isOpen = !!infoExpanded[key];
+    const dms = info ? parseDMs(info.dm) : [];
+    return `<div class="info-card">
+      <div class="info-card-top" onclick="toggleInfoExpand('${safeKey}')">
+        <div style="flex:1;">
+          <div class="info-hop-name">${name}</div>
+          ${dms.length ? `<div class="info-contact-line">DM: ${dms.map(d => `<a href="${d.url}" target="_blank" style="color:#4B0082;text-decoration:none;">${d.handle}</a>`).join(' or ')}</div>` : ''}
+        </div>
+        <span class="info-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
+      </div>
+      ${isOpen && info ? `<div class="info-body">
+        <div class="info-graphic">Hop graphic — coming once connected to your Google Drive</div>
+        <div class="info-desc">${info.desc}</div>
+        ${buildDMLinks(info.dm)}
+      </div>` : ''}
+    </div>`;
+  }).join('');
+  return html;
+}
+
+function renderPrint() {
+  const mn = MONTH_NAMES[vMonth];
+  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  return `
+  <div class="print-section">
+    <h3>Print list view</h3>
+    <p>A dated list of all hops for ${mn} with times in ${tzLabel}.</p>
+    <button class="print-btn" onclick="printList()">Print / Save as PDF — list view</button>
+  </div>
+  <div class="print-section">
+    <h3>Print calendar view</h3>
+    <p>A full monthly calendar grid matching your existing PDF style.</p>
+    <button class="print-btn" onclick="printCal()">Print / Save as PDF — calendar view</button>
+  </div>
+  <div class="print-section" style="background:rgba(243,232,255,0.92);border-color:#dcc6f0;">
+    <h3>How printing works</h3>
+    <p style="color:#7b2fbe;">Clicking either button opens a print-ready page in a new tab. Use <strong>File → Print</strong> or tap the share icon and choose <strong>Print</strong> or <strong>Save as PDF</strong>.</p>
+  </div>`;
+}
+
+function printList() {
+  const mn = MONTH_NAMES[vMonth];
+  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const byDay = {};
+  HOP_DATES.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
+  const days = Object.keys(byDay).map(Number).sort((a,b) => a-b);
+  let body = `<html><head><title>${mn} ${vYear} IG Hops – List View</title>
+  <style>body{font-family:Arial,sans-serif;padding:30px;max-width:700px;margin:0 auto;}
+  h1{font-size:28px;margin-bottom:2px;color:#4B0082;} .sub{font-size:13px;color:#666;margin-bottom:20px;}
+  .day{font-weight:bold;font-size:14px;color:#4B0082;margin-top:14px;margin-bottom:4px;border-bottom:2px solid #e0d0f0;padding-bottom:3px;}
+  .hop{font-size:12px;padding:4px 0 4px 12px;color:#222;border-bottom:1px solid #f0f0f0;}
+  .hop.joined{background:#f3e8ff;color:#2d0050;font-weight:500;border-left:3px solid #4B0082;padding-left:9px;}
+  .footer{margin-top:30px;font-size:11px;color:#999;text-align:center;}
+  @media print{body{padding:15px;}}</style></head><body>
+  <h1>${mn} ${vYear} IG Hops</h1>
+  <div class="sub">Visit @cardmakingIGHOPHQ for details · Times in ${tzLabel} · Created by @craftyengineer</div>`;
+  days.forEach(d => {
+    const wd = DAY_NAMES[new Date(vYear,vMonth,d).getDay()];
+    body += `<div class="day">${wd}, ${mn} ${d}</div>`;
+    byDay[d].forEach(h => {
+      const isJ = !!joined[h.name];
+      const timeStr = convertTime(h.et);
+      const label = h.sub ? `${h.name} – ${h.sub} (${timeStr})` : `${h.name} (${timeStr})`;
+      body += `<div class="hop ${isJ ? 'joined' : ''}">${d}: ${label}</div>`;
+    });
+  });
+  body += `<div class="footer">craftyengineer.com &nbsp;·&nbsp; Join our crafty chat group to get printable PDFs of all the hops (DM to join)</div></body></html>`;
+  const w = window.open('','_blank'); w.document.write(body); w.document.close(); setTimeout(() => w.print(), 500);
+}
+
+function printCal() {
+  const mn = MONTH_NAMES[vMonth];
+  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const firstDay = new Date(vYear,vMonth,1).getDay();
+  const daysInMonth = new Date(vYear,vMonth+1,0).getDate();
+  const byDay = {};
+  HOP_DATES.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
+  let rows = '<tr>';
+  for (let i = 0; i < firstDay; i++) rows += `<td></td>`;
+  let col = firstDay;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const hops = byDay[d] || [];
+    const hopHtml = hops.map(h => {
+      const isJ = !!joined[h.name];
+      const timeStr = convertTime(h.et);
+      const label = h.sub ? `${h.sub} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      return `<div style="font-size:7.5px;line-height:1.35;padding:1px 2px;margin-bottom:1px;border-radius:2px;${isJ ? 'background:#f3e8ff;color:#2d0050;font-weight:bold;border-left:2px solid #4B0082;padding-left:2px;' : 'color:#555;'}">${label}</div>`;
+    }).join('');
+    rows += `<td style="border:1px solid #e0d0f0;padding:4px;vertical-align:top;min-height:90px;">
+      <div style="font-size:13px;font-weight:bold;color:#4B0082;margin-bottom:3px;">${d}</div>${hopHtml}</td>`;
+    col++;
+    if (col % 7 === 0 && d < daysInMonth) rows += '</tr><tr>';
+  }
+  const rem = (7 - (col % 7)) % 7;
+  for (let i = 0; i < rem; i++) rows += `<td style="border:1px solid #e0d0f0;"></td>`;
+  rows += '</tr>';
+  const body = `<html><head><title>${mn} ${vYear} IG Hops – Calendar</title>
+  <style>body{font-family:Arial,sans-serif;padding:15px;}h1{font-size:24px;margin-bottom:2px;color:#4B0082;}
+  .sub{font-size:12px;color:#666;margin-bottom:12px;}table{width:100%;border-collapse:collapse;}
+  th{background:#4B0082;color:white;font-size:11px;padding:5px;border:1px solid #4B0082;text-align:center;}
+  .footer{margin-top:14px;font-size:10px;color:#999;text-align:center;}
+  @media print{body{padding:8px;}}</style></head><body>
+  <h1>${mn} ${vYear} IG Hops</h1>
+  <div class="sub">Visit @cardmakingIGHOPHQ for details &nbsp;·&nbsp; Times in ${tzLabel} &nbsp;·&nbsp; Purple = your joined hops &nbsp;·&nbsp; craftyengineer.com</div>
+  <table><tr>${DAY_NAMES.map(d => `<th>${d}</th>`).join('')}</tr>${rows}</table>
+  <div class="footer">Created by @craftyengineer &nbsp;·&nbsp; Join our crafty chat group to get printable PDFs (DM to join)</div>
+  </body></html>`;
+  const w = window.open('','_blank'); w.document.write(body); w.document.close(); setTimeout(() => w.print(), 500);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MAIN RENDER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  HOP_DATES = getHopDates(vYear, vMonth + 1);
+  document.getElementById('month-label').textContent = MONTH_NAMES[vMonth] + ' ' + vYear;
+  renderSummary();
+  let html = '';
+  if (activeTab === 'hops') html = renderHops();
+  else if (activeTab === 'schedule') html = renderSchedule();
+  else if (activeTab === 'calendar') html = renderCalendar();
+  else if (activeTab === 'info') html = renderInfo();
+  else html = renderPrint();
+  document.getElementById('view').innerHTML = html;
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// GOOGLE SHEET — National Holidays only
+// Fetches the current month tab and merges National Holiday rows
+// into DYNAMIC_HOP_DATES. App renders fine without it.
+// ═══════════════════════════════════════════════════════════════
+
+function currentMonthTabName() {
+  const MONTH_UPPER = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE",
+    "JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
+  return MONTH_UPPER[vMonth] + '_' + vYear;
+}
+
+function parseSheetCSV(csv) {
+  const rows = [];
+  const lines = csv.split('\n');
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const row = [];
+    let inQuote = false, cell = '';
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuote && line[i+1] === '"') { cell += '"'; i++; }
+        else inQuote = !inQuote;
+      } else if (ch === ',' && !inQuote) {
+        row.push(cell.trim()); cell = '';
+      } else { cell += ch; }
+    }
+    row.push(cell.trim());
+    rows.push(row);
+  }
+  return rows;
+}
+
+function parseSheetTime(raw) {
+  if (!raw) return null;
+  const s = raw.replace(/[()]/g,'').trim().toUpperCase();
+  if (!s || s.includes('ANYTIME')) return null;
+  const first = s.split('/')[0].trim();
+  const m = first.match(/(\d{1,2})(?::(\d{2}))?([AP])/);
+  if (!m) return null;
+  return { h: parseInt(m[1]), m: parseInt(m[2] || '0'), p: m[3] };
+}
+
+async function loadNationalHolidays() {
+  // Always clear first so previous month's holidays don't bleed into new month
+  DYNAMIC_HOP_DATES = [];
+  render();
+  try {
+    const tab = currentMonthTabName();
+    // Use export URL with CSV format — works better with CORS from embedded contexts
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) return; // silently fail — static data still works
+
+    const csv = await resp.text();
+    const rows = parseSheetCSV(csv);
+
+    // Find header row to locate columns by name
+    if (rows.length < 2) return;
+    const header = rows[0].map(h => h.toUpperCase().trim());
+    const dayCol  = header.findIndex(h => h.includes('DAY'));
+    const nameCol = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const timeCol = header.findIndex(h => h.includes('TIME'));
+    const subCol  = header.findIndex(h => h.includes('SUB'));
+
+    if (dayCol === -1 || nameCol === -1) return;
+
+    const sheetHops = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const day = parseInt(row[dayCol]);
+      if (isNaN(day) || day < 1) continue;
+      const name = (row[nameCol] || '').trim();
+      if (!name) continue;
+      // Add any hop from the sheet — National Holidays, new hops, anything
+      const sub = subCol >= 0 ? (row[subCol] || '').trim() : null;
+      const et = timeCol >= 0 ? parseSheetTime(row[timeCol]) : null;
+      // All NATIONAL rows become "National Holiday" with subtitle
+      let finalName = name;
+      let finalSub = sub;
+      if (name.toUpperCase().startsWith('NATIONAL')) {
+        finalName = 'National Holiday';
+        if (!finalSub) {
+          // Use hop name minus "NATIONAL HOLIDAY" or "NATIONAL" prefix as subtitle
+          finalSub = name.replace(/^NATIONAL\s+HOLIDAY\s*/i,'').replace(/^NATIONAL\s*/i,'').trim();
+        }
+        // Convert subtitle to Title Case
+        if (finalSub) finalSub = finalSub.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+      }
+      // Try to match finalName against ALL_HOPS case-insensitively
+      const matchedName = ALL_HOPS.find(h => h.toLowerCase() === finalName.toLowerCase()) || finalName;
+      sheetHops.push({ day, name: matchedName, et, sub: finalSub || null });
+    }
+
+    // Always update DYNAMIC_HOP_DATES and re-render, even if empty
+    DYNAMIC_HOP_DATES = sheetHops;
+    render();
+  } catch(e) {
+    // Silently fail — app works fine without sheet
+    DYNAMIC_HOP_DATES = [];
+    render();
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+(function init() {
+  const hasSavedState = loadState();
+  // Pre-select the right timezone in the dropdown
+  const sel = document.getElementById('tz-select');
+  if (sel) {
+    for (let i = 0; i < sel.options.length; i++) {
+      if (parseFloat(sel.options[i].value) === userTZ) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  if (hasSavedState) {
+    document.getElementById('tz-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    // Render immediately from static data so app is never blank
+    render();
+    // Then silently fetch National Holidays from Sheet in background
+    loadNationalHolidays();
+  }
+})();
+</script>
+</body>
+</html>
