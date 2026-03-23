@@ -246,6 +246,9 @@ body{
     </div>
   </div>
 
+  <div id="storage-warning" style="display:none;background:#FEF3C7;border:1.5px solid #D97706;border-radius:12px;padding:9px 14px;margin-bottom:0.75rem;font-size:12px;color:#78350F;line-height:1.5;">
+    ⚠️ <strong>Your selections won't be saved</strong> — this browser has storage disabled (possibly Private/Incognito mode). Switch to a regular browser window to save your hops and tasks.
+  </div>
   <div id="summary-bar" class="summary-bar"></div>
 
   <div class="tabs">
@@ -1284,7 +1287,18 @@ function getHopDates(year, month) {
   // Only merge sheet dates if they belong to THIS specific month
   const sheetDates = (DYNAMIC_HOP_MONTH === month && DYNAMIC_HOP_YEAR === year)
     ? DYNAMIC_HOP_DATES : [];
-  return [...base, ...sheetDates].sort((a,b) => a.day - b.day || a.name.localeCompare(b.name));
+  return [...base, ...sheetDates].sort((a,b) => {
+    if (a.day !== b.day) return a.day - b.day;
+    // Sort by time within same day — null (Anytime) goes first
+    const toMins = et => {
+      if (!et) return -1; // Anytime sorts first
+      let h = et.h;
+      if (et.p === 'P' && h !== 12) h += 12;
+      if (et.p === 'A' && h === 12) h = 0;
+      return h * 60 + et.m;
+    };
+    return toMins(a.et) - toMins(b.et);
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1315,7 +1329,21 @@ let vYear = 2026, vMonth = 2;
 let joined = {}, tasksDone = {}, notes = {}, expanded = {}, infoExpanded = {}, infoOpen = {};
 let activeTab = 'hops', userTZ = -5, showPast = false;
 
+// Test if localStorage is available (Safari private mode blocks it)
+function storageAvailable() {
+  try {
+    const test = '__storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+const HAS_STORAGE = storageAvailable();
+
 function saveState() {
+  if (!HAS_STORAGE) return; // silently skip if storage unavailable
   try {
     localStorage.setItem('hop_joined',  JSON.stringify(joined));
     localStorage.setItem('hop_tasks',   JSON.stringify(tasksDone));
@@ -1327,6 +1355,7 @@ function saveState() {
 }
 
 function loadState() {
+  if (!HAS_STORAGE) return false;
   try {
     const j  = localStorage.getItem('hop_joined');
     const t  = localStorage.getItem('hop_tasks');
@@ -1980,6 +2009,13 @@ async function loadNationalHolidays() {
         break;
       }
     }
+  }
+  if (!HAS_STORAGE) {
+    // Show warning after app loads
+    setTimeout(() => {
+      const w = document.getElementById('storage-warning');
+      if (w) w.style.display = 'block';
+    }, 500);
   }
   if (hasSavedState) {
     document.getElementById('tz-screen').style.display = 'none';
