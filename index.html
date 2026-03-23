@@ -1780,7 +1780,12 @@ function renderHopGraphic(name, small) {
   const style = small
     ? 'width:100%;border-radius:8px;margin-bottom:8px;'
     : 'width:100%;border-radius:10px;margin-bottom:10px;';
-  return `<img src="${url}" style="${style}" onerror="this.style.display='none'" />`;
+  const fallback = getHopGraphicFallbackUrl(name);
+  // On error: try lh3 fallback once, then hide
+  const onerr = fallback
+    ? `this.onerror=function(){this.style.display='none'};this.src='${fallback}'`
+    : `this.style.display='none'`;
+  return `<img src="${url}" style="${style}" onerror="${onerr}" />`;
 }
 
 function renderInfo() {
@@ -1994,11 +1999,24 @@ function getHopGraphicUrl(name) {
   if (g.startsWith('http')) return g;
   // If it looks like a Drive file ID (long alphanumeric string, no extension)
   if (g.length > 20 && !g.includes('.')) {
-    return `https://drive.google.com/uc?export=view&id=${g}`;
+    // Use thumbnail endpoint — more reliable than uc?export=view for public files
+    // sz=s800 requests up to 800px wide (Drive scales proportionally)
+    return `https://drive.google.com/thumbnail?id=${g}&sz=s800`;
   }
   // Otherwise treat as filename in the shared folder
   // Note: Google Drive doesn't support fetch-by-filename directly
   // So store file IDs in column E for best results
+  return null;
+}
+
+// Returns a fallback Drive URL to try if the primary fails
+function getHopGraphicFallbackUrl(name) {
+  const info = HOP_INFO[name];
+  if (!info || !info.graphic) return null;
+  const g = info.graphic.trim();
+  if (g.length > 20 && !g.includes('.') && !g.startsWith('http')) {
+    return `https://lh3.googleusercontent.com/d/${g}`;
+  }
   return null;
 }
 
