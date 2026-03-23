@@ -1452,7 +1452,7 @@ function saveTZ() {
   document.getElementById('tz-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
   render();
-  // Silently fetch National Holidays in background
+  loadHopMaster();
   loadNationalHolidays();
 }
 
@@ -1626,7 +1626,7 @@ function buildHopCard(h, isPast) {
   const info = HOP_INFO[h.name];
 
   const infoPanel = isInfoOpen && info ? `<div class="hop-info-panel">
-    <div class="hop-info-graphic">Hop graphic — coming once connected to Google Drive</div>
+    ${(() => { const _g = getHopGraphicUrl(h.name); return _g ? `<img src="${_g}" style="width:100%;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'" />` : ''; })()}
     <div class="hop-info-desc">${info.desc}</div>
     ${buildDMLinks(info.dm, true)}
   </div>` : '';
@@ -1790,7 +1790,7 @@ function renderInfo() {
         <span class="info-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
       </div>
       ${isOpen && info ? `<div class="info-body">
-        <div class="info-graphic">Hop graphic — coming once connected to your Google Drive</div>
+        ${(() => { const _g = getHopGraphicUrl(name); return _g ? `<img src="${_g}" style="width:100%;border-radius:10px;margin-bottom:10px;" onerror="this.parentNode.innerHTML='<div class=info-graphic>No graphic available</div>'+this.parentNode.innerHTML" />` : '<div class="info-graphic">No graphic available yet</div>'; })()}
         <div class="info-desc">${info.desc}</div>
         ${buildDMLinks(info.dm)}
       </div>` : ''}
@@ -1905,6 +1905,82 @@ function render() {
   document.getElementById('view').innerHTML = html;
 }
 
+
+
+// ═══════════════════════════════════════════════════════════════
+// LOAD HOP_MASTER FROM GOOGLE SHEET
+// Reads descriptions, DM contacts, tasks and graphic filenames
+// Falls back to hardcoded data if sheet unavailable
+// ═══════════════════════════════════════════════════════════════
+const DRIVE_FOLDER_ID = '1RJtpAURLqGnsZKk9HPXU6toVW1Skb7U9';
+let masterLoaded = false;
+
+async function loadHopMaster() {
+  if (masterLoaded) return;
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=HOP_MASTER`;
+    const resp = await fetch(url);
+    if (!resp.ok) return;
+    const csv = await resp.text();
+    const rows = parseSheetCSV(csv);
+    if (rows.length < 2) return;
+
+    // Find columns by header name
+    const header = rows[0].map(h => h.toUpperCase().trim());
+    const nameCol    = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const descCol    = header.findIndex(h => h.includes('DESC'));
+    const dmCol      = header.findIndex(h => h.includes('DM') || h.includes('CONTACT'));
+    const tasksCol   = header.findIndex(h => h.includes('TASK'));
+    const graphicCol = header.findIndex(h => h.includes('GRAPHIC') || h.includes('IMAGE') || h.includes('FILE'));
+
+    if (nameCol === -1) return;
+
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (row[nameCol] || '').trim();
+      if (!name) continue;
+
+      // Match to existing hop case-insensitively
+      const matchedName = ALL_HOPS.find(h => h.toLowerCase() === name.toLowerCase()) || name;
+
+      // Update HOP_INFO
+      const desc    = descCol >= 0    ? (row[descCol] || '').trim()    : '';
+      const dm      = dmCol >= 0      ? (row[dmCol] || '').trim()      : '';
+      const graphic = graphicCol >= 0 ? (row[graphicCol] || '').trim() : '';
+
+      if (desc || dm) {
+        HOP_INFO[matchedName] = {
+          desc: desc || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].desc : ''),
+          dm:   dm   || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].dm   : ''),
+          graphic: graphic || ''
+        };
+      }
+
+      // Update HOP_TASKS if tasks column has data
+      if (tasksCol >= 0) {
+        const tasks = (row[tasksCol] || '').trim();
+        if (tasks === '[]') {
+          HOP_TASKS[matchedName] = [];
+        } else if (tasks) {
+          const parsed = tasks.replace(/[\[\]]/g,'').split(',')
+            .map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+          if (parsed.length > 0) HOP_TASKS[matchedName] = parsed;
+        }
+      }
+    }
+    masterLoaded = true;
+    render(); // re-render with updated info
+  } catch(e) {
+    console.log('HOP_MASTER load skipped:', e.message);
+  }
+}
+
+// Returns graphic URL for a hop if available
+function getHopGraphicUrl(name) {
+  const info = HOP_INFO[name];
+  if (!info || !info.graphic) return null;
+  return `https://drive.google.com/uc?export=view&id=${DRIVE_FOLDER_ID}&name=${encodeURIComponent(info.graphic)}`;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // GOOGLE SHEET — National Holidays only
@@ -2231,7 +2307,8 @@ function checkSavedDriveToken() {
     document.getElementById('app').style.display = 'block';
     // Render immediately from static data so app is never blank
     render();
-    // Then silently fetch National Holidays from Sheet in background
+    // Load HOP_MASTER for descriptions/graphics, then load National Holidays
+    loadHopMaster();
     loadNationalHolidays();
   }
 })();
