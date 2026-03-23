@@ -1626,7 +1626,7 @@ function buildHopCard(h, isPast) {
   const info = HOP_INFO[h.name];
 
   const infoPanel = isInfoOpen && info ? `<div class="hop-info-panel">
-    ${(() => { const _g = getHopGraphicUrl(h.name); return _g ? `<img src="${_g}" style="width:100%;border-radius:8px;margin-bottom:8px;" onerror="this.style.display='none'" />` : ''; })()}
+    ${renderHopGraphic(h.name, true)}
     <div class="hop-info-desc">${info.desc}</div>
     ${buildDMLinks(info.dm, true)}
   </div>` : '';
@@ -1773,6 +1773,16 @@ function renderCalendar() {
   </div>`;
 }
 
+
+function renderHopGraphic(name, small) {
+  const url = getHopGraphicUrl(name);
+  if (!url) return small ? '' : '<div class="info-graphic">No graphic available yet</div>';
+  const style = small
+    ? 'width:100%;border-radius:8px;margin-bottom:8px;'
+    : 'width:100%;border-radius:10px;margin-bottom:10px;';
+  return `<img src="${url}" style="${style}" onerror="this.style.display='none'" />`;
+}
+
 function renderInfo() {
   let html = `<p class="info-intro">Tap any hop to see its full description and how to join on Instagram.</p>`;
   html += ALL_HOPS.map(name => {
@@ -1790,7 +1800,7 @@ function renderInfo() {
         <span class="info-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
       </div>
       ${isOpen && info ? `<div class="info-body">
-        ${(() => { const _g = getHopGraphicUrl(name); return _g ? `<img src="${_g}" style="width:100%;border-radius:10px;margin-bottom:10px;" onerror="this.parentNode.innerHTML='<div class=info-graphic>No graphic available</div>'+this.parentNode.innerHTML" />` : '<div class="info-graphic">No graphic available yet</div>'; })()}
+       ${renderHopGraphic(name)}
         <div class="info-desc">${info.desc}</div>
         ${buildDMLinks(info.dm)}
       </div>` : ''}
@@ -1979,7 +1989,17 @@ async function loadHopMaster() {
 function getHopGraphicUrl(name) {
   const info = HOP_INFO[name];
   if (!info || !info.graphic) return null;
-  return `https://drive.google.com/uc?export=view&id=${DRIVE_FOLDER_ID}&name=${encodeURIComponent(info.graphic)}`;
+  const g = info.graphic.trim();
+  // If it looks like a full URL, use it directly
+  if (g.startsWith('http')) return g;
+  // If it looks like a Drive file ID (long alphanumeric string, no extension)
+  if (g.length > 20 && !g.includes('.')) {
+    return `https://drive.google.com/uc?export=view&id=${g}`;
+  }
+  // Otherwise treat as filename in the shared folder
+  // Note: Google Drive doesn't support fetch-by-filename directly
+  // So store file IDs in column E for best results
+  return null;
 }
 
 // ═══════════════════════════════════════════════════════════════
