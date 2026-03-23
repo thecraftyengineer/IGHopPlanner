@@ -1963,11 +1963,12 @@ async function loadHopMaster() {
       const dm      = dmCol >= 0      ? (row[dmCol] || '').trim()      : '';
       const graphic = graphicCol >= 0 ? (row[graphicCol] || '').trim() : '';
 
-      if (desc || dm) {
+      // Always update HOP_INFO if any field is present (graphic may exist without desc/dm)
+      if (desc || dm || graphic) {
         HOP_INFO[matchedName] = {
-          desc: desc || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].desc : ''),
-          dm:   dm   || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].dm   : ''),
-          graphic: graphic || ''
+          desc:    desc    || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].desc    : ''),
+          dm:      dm      || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].dm      : ''),
+          graphic: graphic || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].graphic : '')
         };
       }
 
