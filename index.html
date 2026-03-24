@@ -44,8 +44,8 @@ body{
 .tab.active{background:#4B0082;color:white;border-color:#4B0082;}
 
 /* WELCOME / TZ SCREEN */
-#tz-screen{display:block;}
-#app{display:none;}
+#tz-screen{display:none;}
+#app{display:block;}
 .tz-card{background:rgba(255,255,255,0.95);border:2px solid #e0d0f0;border-radius:16px;padding:1.5rem;text-align:center;}
 .tz-dots{display:flex;justify-content:center;gap:7px;margin-bottom:14px;}
 .tz-dot{width:12px;height:12px;border-radius:50%;}
@@ -217,21 +217,21 @@ body{
     <div class="tz-body-text">All hop times are listed in Eastern Time (ET). Select your time zone once and everything converts automatically throughout the app.</div>
     <div class="tz-label">Your time zone</div>
     <select class="tz-select" id="tz-select">
-      <option value="-5">Eastern Time (ET)</option>
-      <option value="-6">Central Time (CT)</option>
-      <option value="-7">Mountain Time (MT)</option>
-      <option value="-8">Pacific Time (PT)</option>
-      <option value="-9">Alaska (AKT)</option>
-      <option value="-10">Hawaii (HST)</option>
-      <option value="0">United Kingdom (GMT/BST)</option>
-      <option value="1">Central Europe (CET)</option>
-      <option value="2">Eastern Europe (EET)</option>
-      <option value="3">Moscow / Gulf (UTC+3)</option>
-      <option value="5.5">India (IST)</option>
-      <option value="8">China / Singapore / Perth</option>
-      <option value="9">Japan / Korea (JST)</option>
-      <option value="10">Eastern Australia (AEST)</option>
-      <option value="11">New Zealand (NZST)</option>
+      <option value="America/New_York">Eastern Time (ET)</option>
+      <option value="America/Chicago">Central Time (CT)</option>
+      <option value="America/Denver">Mountain Time (MT)</option>
+      <option value="America/Los_Angeles">Pacific Time (PT)</option>
+      <option value="America/Anchorage">Alaska (AKT)</option>
+      <option value="Pacific/Honolulu">Hawaii (HST)</option>
+      <option value="Europe/London">United Kingdom (GMT/BST)</option>
+      <option value="Europe/Paris">Central Europe (CET/CEST)</option>
+      <option value="Europe/Helsinki">Eastern Europe (EET/EEST)</option>
+      <option value="Europe/Moscow">Moscow (MSK)</option>
+      <option value="Asia/Kolkata">India (IST)</option>
+      <option value="Asia/Shanghai">China / Singapore (CST)</option>
+      <option value="Asia/Tokyo">Japan / Korea (JST)</option>
+      <option value="Australia/Sydney">Eastern Australia (AEST)</option>
+      <option value="Pacific/Auckland">New Zealand (NZST)</option>
     </select>
     <button class="tz-btn" onclick="saveTZ()">Let's go!</button>
     <div class="tz-note">You can change this any time from the All Hops tab.</div>
@@ -270,7 +270,8 @@ body{
   </div>
 
   <div class="tabs">
-    <div class="tab active" id="tab-hops" onclick="setTab('hops')">All Hops</div>
+    <div class="tab active" id="tab-home" onclick="setTab('home')">Home</div>
+    <div class="tab" id="tab-hops" onclick="setTab('hops')">All Hops</div>
     <div class="tab" id="tab-schedule" onclick="setTab('schedule')">My Schedule</div>
     <div class="tab" id="tab-calendar" onclick="setTab('calendar')">Calendar</div>
     <div class="tab" id="tab-info" onclick="setTab('info')">Hop Info</div>
@@ -280,9 +281,7 @@ body{
   <div id="view"></div>
 
   <div class="bmc-bar">
-    <a class="bmc-btn" href="https://buymeacoffee.com/craftyengineer" target="_blank" rel="noopener">
-      <span class="bmc-icon">☕</span> Buy me a coffee
-    </a>
+    <a href="https://buymeacoffee.com/craftyengineer" target="_blank" rel="noopener" style="color:#9d6bbf;font-size:11px;text-decoration:none;opacity:0.8;">☕ Buy me a coffee</a>
   </div>
   <div class="app-footer">craftyengineer.com &nbsp;·&nbsp; @craftyengineer &nbsp;·&nbsp; @cardmakingIGHOPHQ</div>
 </div>
@@ -1327,7 +1326,48 @@ function getHopDates(year, month) {
 // ═══════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════
-const TZ_LABELS = { "-5":"ET","-6":"CT","-7":"MT","-8":"PT","-9":"AKT","-10":"HST","0":"GMT","1":"CET","2":"EET","3":"UTC+3","5.5":"IST","8":"UTC+8","9":"JST","10":"AEST","11":"NZST" };
+// IANA timezone → short label map
+const TZ_LABELS = {
+  "America/New_York":"ET","America/Chicago":"CT","America/Denver":"MT",
+  "America/Los_Angeles":"PT","America/Anchorage":"AKT","Pacific/Honolulu":"HST",
+  "Europe/London":"GMT/BST","Europe/Paris":"CET","Europe/Helsinki":"EET",
+  "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
+  "Asia/Tokyo":"JST","Australia/Sydney":"AEST","Pacific/Auckland":"NZST"
+};
+
+// Legacy numeric → IANA migration map
+const TZ_MIGRATE = {
+  "-5":"America/New_York","-6":"America/Chicago","-7":"America/Denver",
+  "-8":"America/Los_Angeles","-9":"America/Anchorage","-10":"Pacific/Honolulu",
+  "0":"Europe/London","1":"Europe/Paris","2":"Europe/Helsinki",
+  "3":"Europe/Moscow","5.5":"Asia/Kolkata","8":"Asia/Shanghai",
+  "9":"Asia/Tokyo","10":"Australia/Sydney","11":"Pacific/Auckland"
+};
+
+// Convert ET time object to user's local time using IANA DST-aware timezone
+function convertTimeIANA(et) {
+  if (!et) return "Anytime";
+  // Build a reference date in Eastern Time
+  let h = et.h;
+  if (et.p === 'P' && h !== 12) h += 12;
+  if (et.p === 'A' && h === 12) h = 0;
+  const m = et.m || 0;
+  // Use today's date as reference (DST correctness)
+  const now = new Date();
+  const etStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`;
+  // Parse as ET
+  const etDate = new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'}));
+  const utcMs = new Date(etStr).getTime() + (new Date(etStr) - new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'})));
+  // Get local time string in user's timezone
+  const tz = userTZ || 'America/New_York';
+  const localStr = new Date(utcMs).toLocaleString('en-US', {timeZone: tz, hour:'numeric', minute:'2-digit', hour12:true});
+  const label = TZ_LABELS[tz] || 'Local';
+  return localStr.replace(':00','').replace(' AM',' A').replace(' PM',' P') + ' ' + label;
+}
+
+function getTZLabel() {
+  return TZ_LABELS[userTZ] || 'Local';
+}
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
@@ -1350,7 +1390,10 @@ const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 // ═══════════════════════════════════════════════════════════════
 let vYear = 2026, vMonth = 2;
 let joined = {}, tasksDone = {}, notes = {}, expanded = {}, infoExpanded = {}, infoOpen = {};
-let activeTab = 'hops', userTZ = -5, showPast = false, hopSortAlpha = true;
+let activeTab = 'home', userTZ = 'America/New_York', showPast = false, hopSortAlpha = true;
+let homeInstrOpen = true; // instructions expanded by default on Home tab
+let hopsInstrOpen = false; // instructions collapsed by default on All Hops tab
+let hopsListOpen = true;   // hop list expanded by default on All Hops tab
 
 // Test if localStorage is available (Safari private mode blocks it)
 function storageAvailable() {
@@ -1394,31 +1437,22 @@ function loadState() {
     if (j)  joined    = JSON.parse(j);
     if (t)  tasksDone = JSON.parse(t);
     if (n)  notes     = JSON.parse(n);
-    if (tz) userTZ    = parseFloat(tz);
+    if (tz) {
+      // Migrate old numeric TZ values → IANA strings
+      userTZ = TZ_MIGRATE[tz] || (TZ_LABELS[tz] ? tz : 'America/New_York');
+      if (TZ_MIGRATE[tz]) localStorage.setItem('hop_tz', userTZ); // save migrated value
+    }
     if (yr) vYear     = parseInt(yr);
     if (mo) vMonth    = parseInt(mo);
-    return !!tz; // true = TZ was previously set → skip welcome screen
+    return !!tz; // true = TZ was previously set → skip welcome screen, go to All Hops
   } catch(e) { return false; }
 }
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════════════════
-function convertTime(et) {
-  if (!et) return "Anytime";
-  let h = et.h;
-  if (et.p === 'P' && h !== 12) h += 12;
-  if (et.p === 'A' && h === 12) h = 0;
-  let utc = h + 5 + et.m / 60;
-  let local = ((utc + userTZ) % 24 + 24) % 24;
-  const lh = Math.floor(local);
-  const lm = Math.round((local - lh) * 60);
-  const ampm = lh >= 12 ? 'P' : 'A';
-  const displayH = lh % 12 || 12;
-  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
-  const minStr = lm > 0 ? ':' + String(lm).padStart(2,'0') : '';
-  return `${displayH}${minStr}${ampm} ${tzLabel}`;
-}
+// convertTime is an alias for convertTimeIANA (defined above with IANA TZ support)
+function convertTime(et) { return convertTimeIANA(et); }
 
 // Task key — includes day, so tasks are per-occurrence and reset fresh each month
 function okey(day, name, sub) { return `${vYear}-${vMonth}-${day}|${name}${sub ? '::' + sub : ''}`; }
@@ -1456,18 +1490,14 @@ function buildDMLinks(s, small) {
 // ACTIONS
 // ═══════════════════════════════════════════════════════════════
 function saveTZ() {
-  userTZ = parseFloat(document.getElementById('tz-select').value);
+  userTZ = document.getElementById('tz-select').value; // IANA string
   saveState();
-  document.getElementById('tz-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  render();
-  loadHopMaster();
-  loadNationalHolidays();
+  setTab('hops');
 }
 
 function changeTZ() {
-  document.getElementById('app').style.display = 'none';
-  document.getElementById('tz-screen').style.display = 'block';
+  // Switch to Home tab where TZ selector lives
+  setTab('home');
 }
 
 function changeMonth(d) {
@@ -1677,59 +1707,174 @@ function toggleHopSort() {
   render();
 }
 
-function renderHops() {
-  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
-  const mn = MONTH_NAMES[vMonth];
-  let html = `<div class="hint-box">
-    <div class="hint-step"><div class="hint-num">1</div><div class="hint-text">Select the hops you have joined for <strong>${mn}</strong> by tapping the circle next to each one.</div></div>
-    <div class="hint-step"><div class="hint-num">2</div><div class="hint-text">Your selected hops appear in the <strong>My Schedule</strong> tab sorted by date, with a task checklist for each occurrence.</div></div>
-    <div class="hint-step"><div class="hint-num">3</div><div class="hint-text">The <strong>Calendar</strong> and <strong>Hop Info</strong> tabs show all hops — yours highlighted in purple.</div></div>
-    <div style="font-size:11px;color:#9d6bbf;margin-top:8px;">Times shown in <strong>${tzLabel}</strong>. <span class="tz-badge" onclick="changeTZ()">&#9998; Change time zone</span></div>
-  </div><div class="section-card">`;
+function renderHome() {
+  // Build TZ options HTML with current userTZ selected
+  const tzOptions = [
+    ["America/New_York","Eastern Time (ET)"],
+    ["America/Chicago","Central Time (CT)"],
+    ["America/Denver","Mountain Time (MT)"],
+    ["America/Los_Angeles","Pacific Time (PT)"],
+    ["America/Anchorage","Alaska (AKT)"],
+    ["Pacific/Honolulu","Hawaii (HST)"],
+    ["Europe/London","United Kingdom (GMT/BST)"],
+    ["Europe/Paris","Central Europe (CET/CEST)"],
+    ["Europe/Helsinki","Eastern Europe (EET/EEST)"],
+    ["Europe/Moscow","Moscow (MSK)"],
+    ["Asia/Kolkata","India (IST)"],
+    ["Asia/Shanghai","China / Singapore (CST)"],
+    ["Asia/Tokyo","Japan / Korea (JST)"],
+    ["Australia/Sydney","Eastern Australia (AEST)"],
+    ["Pacific/Auckland","New Zealand (NZST)"]
+  ].map(([val,label]) =>
+    `<option value="${val}"${userTZ === val ? ' selected' : ''}>${label}</option>`
+  ).join('');
 
-  const sortedHops = hopSortAlpha
-    ? [...ALL_HOPS]
-    : [...ALL_HOPS].sort((a, b) => {
-        const aNext = getHopDates(vYear, vMonth + 1).find(h => h.name === a);
-        const bNext = getHopDates(vYear, vMonth + 1).find(h => h.name === b);
-        if (!aNext && !bNext) return 0;
-        if (!aNext) return 1;
-        if (!bNext) return -1;
-        return aNext.day - bNext.day;
-      });
+  const instrOpen = homeInstrOpen !== false; // default expanded
+  const instrArrow = instrOpen ? '▲' : '▼';
 
-  const sortBtnBg = hopSortAlpha ? '#f3e8ff' : '#4B0082';
-  const sortBtnColor = hopSortAlpha ? '#4B0082' : '#fff';
-  const sortBtnLabel = hopSortAlpha ? '⇅ Sort by date' : '⇅ Sort A–Z';
-  html += '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">'
-       + '<button onclick="toggleHopSort()" style="font-size:11px;padding:5px 12px;border-radius:14px;border:1.5px solid #c9a7e8;background:' + sortBtnBg + ';color:' + sortBtnColor + ';cursor:pointer;font-weight:500;">'
-       + sortBtnLabel
-       + '</button></div>';
-
-  html += sortedHops.map(name => {
-    const on = !!joined[name];
-    // Use full hop dates for current month including sheet-loaded holidays
-    const occ = getHopDates(vYear, vMonth + 1).filter(h => h.name === name).length;
-    const taskCount = getTasksForHop(name).length;
-    const safeName = safe(name);
-    const infoKey = 'join_' + name;
-    const safeInfoKey = safe(infoKey);
-    return `<div class="join-item">
-      <div class="join-circle ${on ? 'on' : ''}" onclick="toggleJoin('${safeName}')">✓</div>
-      <div class="join-name-wrap" onclick="toggleJoin('${safeName}')">
-        <div class="join-name ${on ? 'on' : ''}">${name}</div>
-        <div class="join-occ">${occ} occurrence${occ !== 1 ? 's' : ''} &nbsp;·&nbsp; ${taskCount} tasks</div>
+  return `
+  <div class="section-card" style="margin-bottom:12px;">
+    <div style="text-align:center;padding:4px 0 10px;">
+      <div style="font-size:20px;font-weight:800;color:#4B0082;letter-spacing:-0.5px;line-height:1.2;">CraftyEngineer's<br><span style="color:#9d6bbf;">Card Making IG Hop Planner</span></div>
+      <div style="font-size:11px;color:#9d6bbf;margin-top:4px;">
+        <a href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:600;">@craftyengineer</a>
+        &nbsp;·&nbsp;
+        <a href="https://instagram.com/cardmakingighophq" style="color:#9d6bbf;">@cardmakingIGHOPHQ</a>
       </div>
-      <button class="join-info-btn" onclick="event.stopPropagation();toggleInfoExpand('${safeInfoKey}')">${infoExpanded[infoKey] ? 'Hide' : 'Info'}</button>
     </div>
-    ${infoExpanded[infoKey] && HOP_INFO[name] ? `<div class="join-info-inline">
-      <div class="join-info-inline-desc">${HOP_INFO[name].desc}</div>
-      ${buildDMLinks(HOP_INFO[name].dm, true)}
-    </div>` : ''}`;
-  }).join('');
+    <hr style="border:none;border-top:1px solid #e9d5ff;margin:0 0 12px;">
+
+    <div style="margin-bottom:14px;">
+      <div style="font-size:13px;font-weight:700;color:#4B0082;margin-bottom:6px;">🕐 Your Time Zone</div>
+      <div style="font-size:12px;color:#666;margin-bottom:8px;">All hop times are listed in Eastern Time (ET). Set your zone once and everything converts automatically.</div>
+      <select id="tz-select-home" onchange="applyHomeTZ()" style="width:100%;padding:8px 10px;border-radius:10px;border:1.5px solid #c9a7e8;font-size:13px;background:#faf5ff;color:#4B0082;font-weight:500;">
+        ${tzOptions}
+      </select>
+      <div style="font-size:11px;color:#9d6bbf;margin-top:5px;text-align:right;">Changes apply instantly ✓</div>
+    </div>
+
+    <div style="margin-bottom:6px;">
+      <div onclick="toggleHomeInstr()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:6px 0;border-top:1px solid #f3e8ff;">
+        <span style="font-size:13px;font-weight:700;color:#4B0082;">📖 How to use this app</span>
+        <span style="font-size:13px;color:#9d6bbf;">${instrArrow}</span>
+      </div>
+      ${instrOpen ? `
+      <div style="font-size:12px;color:#444;line-height:1.65;padding:4px 0 2px;">
+        <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">1</span><strong>All Hops</strong> — Tap the circle next to any hop you've joined for the month. Times convert to your timezone automatically.</div>
+        <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">2</span><strong>My Schedule</strong> — See only your joined hops, sorted by date, with a task checklist for each occurrence.</div>
+        <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">3</span><strong>Calendar</strong> — Month view with all hops. Yours are highlighted in purple.</div>
+        <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">4</span><strong>Hop Info</strong> — Descriptions, DM contacts, and task lists for every hop.</div>
+        <div><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">5</span><strong>Print</strong> — Printable version of your schedule or the full hop list.</div>
+        <div style="margin-top:10px;padding:8px 10px;background:#faf5ff;border-radius:8px;border-left:3px solid #c9a7e8;font-size:11px;color:#666;">
+          💾 Your selections are saved automatically in this browser. Connect Google Drive (from the All Hops tab) to sync across devices.
+        </div>
+      </div>` : ''}
+    </div>
+  </div>
+
+  <div style="text-align:center;padding:10px 0 4px;">
+    <a href="https://buymeacoffee.com/craftyengineer" target="_blank" rel="noopener"
+       style="display:inline-flex;align-items:center;gap:7px;background:#FFDD00;color:#000;font-weight:700;font-size:13px;padding:10px 22px;border-radius:22px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.13);">
+      ☕ Buy me a coffee
+    </a>
+    <div style="font-size:10px;color:#bbb;margin-top:6px;">Made with ♥ by @craftyengineer</div>
+  </div>`;
+}
+
+function applyHomeTZ() {
+  const sel = document.getElementById('tz-select-home');
+  if (!sel) return;
+  userTZ = sel.value;
+  // Also sync the tz-screen select if it exists
+  const sel2 = document.getElementById('tz-select');
+  if (sel2) sel2.value = userTZ;
+  saveState();
+  render(); // re-render so time displays update
+}
+
+function toggleHomeInstr() {
+  homeInstrOpen = !homeInstrOpen;
+  render();
+}
+
+function renderHops() {
+  const tzLabel = getTZLabel();
+  const mn = MONTH_NAMES[vMonth];
+
+  // Collapsible instructions (collapsed by default on All Hops tab)
+  const instrOpen = !!hopsInstrOpen;
+  const instrArrow = instrOpen ? '▲' : '▼';
+  let html = `<div class="section-card" style="margin-bottom:10px;padding:10px 12px;">
+    <div onclick="toggleHopsInstr()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">
+      <span style="font-size:13px;font-weight:700;color:#4B0082;">📖 Instructions</span>
+      <span style="font-size:13px;color:#9d6bbf;">${instrArrow}</span>
+    </div>
+    ${instrOpen ? `<div style="margin-top:8px;">
+      <div class="hint-step"><div class="hint-num">1</div><div class="hint-text">Select the hops you have joined for <strong>${mn}</strong> by tapping the circle next to each one.</div></div>
+      <div class="hint-step"><div class="hint-num">2</div><div class="hint-text">Your selected hops appear in the <strong>My Schedule</strong> tab sorted by date, with a task checklist for each occurrence.</div></div>
+      <div class="hint-step"><div class="hint-num">3</div><div class="hint-text">The <strong>Calendar</strong> and <strong>Hop Info</strong> tabs show all hops — yours highlighted in purple.</div></div>
+      <div style="font-size:11px;color:#9d6bbf;margin-top:8px;">Times shown in <strong>${tzLabel}</strong>. <span class="tz-badge" onclick="changeTZ()">&#9998; Change time zone</span></div>
+    </div>` : `<div style="font-size:11px;color:#9d6bbf;margin-top:4px;">Times in <strong>${tzLabel}</strong>. <span class="tz-badge" onclick="changeTZ()">&#9998; Change</span></div>`}
+  </div>`;
+
+  // Collapsible hop list (collapsed by default)
+  const listOpen = !!hopsListOpen;
+  const listArrow = listOpen ? '▲' : '▼';
+  const joinedCount = ALL_HOPS.filter(n => joined[n]).length;
+
+  html += `<div class="section-card">
+    <div onclick="toggleHopsList()" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;margin-bottom:${listOpen ? '10px' : '0'};">
+      <span style="font-size:13px;font-weight:700;color:#4B0082;">Current Hops for ${mn} <span style="font-weight:400;color:#9d6bbf;font-size:12px;">(${joinedCount} joined)</span></span>
+      <span style="font-size:13px;color:#9d6bbf;">${listArrow}</span>
+    </div>`;
+
+  if (listOpen) {
+    const sortedHops = hopSortAlpha
+      ? [...ALL_HOPS]
+      : [...ALL_HOPS].sort((a, b) => {
+          const aNext = HOP_DATES.find(h => h.name === a);
+          const bNext = HOP_DATES.find(h => h.name === b);
+          if (!aNext && !bNext) return 0;
+          if (!aNext) return 1;
+          if (!bNext) return -1;
+          return aNext.day - bNext.day;
+        });
+
+    const sortBtnBg = hopSortAlpha ? '#f3e8ff' : '#4B0082';
+    const sortBtnColor = hopSortAlpha ? '#4B0082' : '#fff';
+    const sortBtnLabel = hopSortAlpha ? '⇅ Sort by date' : '⇅ Sort A–Z';
+    html += '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">'
+         + '<button onclick="toggleHopSort()" style="font-size:11px;padding:5px 12px;border-radius:14px;border:1.5px solid #c9a7e8;background:' + sortBtnBg + ';color:' + sortBtnColor + ';cursor:pointer;font-weight:500;">'
+         + sortBtnLabel
+         + '</button></div>';
+
+    html += sortedHops.map(name => {
+      const on = !!joined[name];
+      const occ = HOP_DATES.filter(h => h.name === name).length;
+      const taskCount = getTasksForHop(name).length;
+      const safeName = safe(name);
+      const infoKey = 'join_' + name;
+      const safeInfoKey = safe(infoKey);
+      return `<div class="join-item">
+        <div class="join-circle ${on ? 'on' : ''}" onclick="toggleJoin('${safeName}')">✓</div>
+        <div class="join-name-wrap" onclick="toggleJoin('${safeName}')">
+          <div class="join-name ${on ? 'on' : ''}">${name}</div>
+          <div class="join-occ">${occ} occurrence${occ !== 1 ? 's' : ''} &nbsp;·&nbsp; ${taskCount} tasks</div>
+        </div>
+        <button class="join-info-btn" onclick="event.stopPropagation();toggleInfoExpand('${safeInfoKey}')">${infoExpanded[infoKey] ? 'Hide' : 'Info'}</button>
+      </div>
+      ${infoExpanded[infoKey] && HOP_INFO[name] ? `<div class="join-info-inline">
+        <div class="join-info-inline-desc">${HOP_INFO[name].desc}</div>
+        ${buildDMLinks(HOP_INFO[name].dm, true)}
+      </div>` : ''}`;
+    }).join('');
+  }
 
   return html + '</div>';
 }
+
+function toggleHopsInstr() { hopsInstrOpen = !hopsInstrOpen; render(); }
+function toggleHopsList()  { hopsListOpen  = !hopsListOpen;  render(); }
 
 function renderSchedule() {
   const mn = MONTH_NAMES[vMonth];
@@ -1823,7 +1968,7 @@ function renderCalendar() {
     }).join('');
     cells += `<div class="vcal-cell ${isPast && !todayDay ? 'past-cell' : ''}">${numEl}${hopEls}</div>`;
   }
-  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const tzLabel = getTZLabel();
   return `<div class="cal-hint">All hops for the month — <strong style="color:#4B0082;">yours in purple</strong>. Past days dimmed. Times in <strong>${tzLabel}</strong>. Updates automatically when hops are added.</div>
   <div class="vcal-wrap">
     <div class="vcal-hdr">${DAY_SHORT.map(d => `<div class="vcal-dn">${d}</div>`).join('')}</div>
@@ -1874,7 +2019,7 @@ function renderInfo() {
 
 function renderPrint() {
   const mn = MONTH_NAMES[vMonth];
-  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const tzLabel = getTZLabel();
   return `
   <div class="print-section">
     <h3>Print list view</h3>
@@ -1894,7 +2039,7 @@ function renderPrint() {
 
 function printList() {
   const mn = MONTH_NAMES[vMonth];
-  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const tzLabel = getTZLabel();
   const byDay = {};
   HOP_DATES.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
   const days = Object.keys(byDay).map(Number).sort((a,b) => a-b);
@@ -1924,7 +2069,7 @@ function printList() {
 
 function printCal() {
   const mn = MONTH_NAMES[vMonth];
-  const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
+  const tzLabel = getTZLabel();
   const firstDay = new Date(vYear,vMonth,1).getDay();
   const daysInMonth = new Date(vYear,vMonth+1,0).getDate();
   const byDay = {};
@@ -1970,7 +2115,8 @@ function render() {
   document.getElementById('month-label').textContent = MONTH_NAMES[vMonth] + ' ' + vYear;
   renderSummary();
   let html = '';
-  if (activeTab === 'hops') html = renderHops();
+  if (activeTab === 'home') html = renderHome();
+  else if (activeTab === 'hops') html = renderHops();
   else if (activeTab === 'schedule') html = renderSchedule();
   else if (activeTab === 'calendar') html = renderCalendar();
   else if (activeTab === 'info') html = renderInfo();
@@ -2402,18 +2548,17 @@ function checkSavedDriveToken() {
 // ═══════════════════════════════════════════════════════════════
 (function init() {
   const hasSavedState = loadState();
-  // Pre-select the right timezone in the dropdown
+  // Pre-select the right timezone in the dropdown (IANA string match)
   const sel = document.getElementById('tz-select');
   if (sel) {
     for (let i = 0; i < sel.options.length; i++) {
-      if (parseFloat(sel.options[i].value) === userTZ) {
+      if (sel.options[i].value === userTZ) {
         sel.selectedIndex = i;
         break;
       }
     }
   }
   if (!HAS_STORAGE) {
-    // Show warning after app loads
     setTimeout(() => {
       const w = document.getElementById('storage-warning');
       if (w) w.style.display = 'block';
@@ -2421,15 +2566,14 @@ function checkSavedDriveToken() {
   }
   // Check for saved Drive token
   checkSavedDriveToken();
-  if (hasSavedState) {
-    document.getElementById('tz-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    // Render immediately from static data so app is never blank
-    render();
-    // Load HOP_MASTER for descriptions/graphics, then load National Holidays
-    loadHopMaster();
-    loadNationalHolidays();
-  }
+  // Always show app (Home tab is now the first tab)
+  document.getElementById('tz-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  // New users land on Home tab; returning users go straight to All Hops
+  activeTab = hasSavedState ? 'hops' : 'home';
+  render();
+  loadHopMaster();
+  loadNationalHolidays();
 })();
 </script>
 </body>
