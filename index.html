@@ -1742,12 +1742,6 @@ function renderNextUp() {
   </div>`;
 }
 
-function renderLegend() {
-  return `<div class="task-legend">${ALL_TASKS.map((t,i) =>
-    `<div class="legend-pill" style="background:${TASK_COLORS[i].bg};color:${TASK_COLORS[i].text};">${t.label}</div>`
-  ).join('')}</div>`;
-}
-
 function buildHopCard(h, isPast) {
   const ok = okey(h.day, h.name, h.sub);
   const nk = nkey(h.day, h.name, h.sub);
@@ -1780,7 +1774,7 @@ function buildHopCard(h, isPast) {
         const isYes = rcState === 'yes';
         const isNo  = rcState === 'no';
         return `<div class="task-row ${isYes ? 'c2' : isNo ? 'c0' : ''}">
-          <span class="task-lbl">${ALL_TASKS[0].label}</span>
+          <span class="task-lbl" style="flex:none;margin-right:10px;">${ALL_TASKS[0].label}</span>
           <div style="display:flex;gap:5px;flex-shrink:0;">
             <button onclick="event.stopPropagation();cycleRollCall('${rcIdx}','${rcState}','yes')"
               style="padding:3px 10px;border-radius:6px;border:2px solid ${isYes ? '#059669' : '#d0b8e8'};background:${isYes ? '#059669' : 'white'};color:${isYes ? 'white' : '#9d6bbf'};font-size:11px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;">✓ Yes</button>
@@ -2001,7 +1995,7 @@ function renderSchedule() {
   const futureDays = days.filter(d => !isDatePast(d));
   const pastHopCount = pastDays.reduce((s,d) => s + byDay[d].length, 0);
 
-  let html = renderLegend() + renderNextUp();
+  let html = renderNextUp();
 
   if (pastDays.length) {
     html += `<div class="past-toggle" onclick="toggleShowPast()">
