@@ -2548,18 +2548,17 @@ async function loadHopMaster() {
     const descCol     = header.findIndex(h => h.includes('DESC'));
     const dmCol       = header.findIndex(h => h.includes('DM') || h.includes('CONTACT'));
     const tasksCol    = header.findIndex(h => h.includes('TASK'));
-    const graphicCol  = header.findIndex(h => h.includes('FILE ID') || h.includes('FILEID') || (h.includes('FILE') && !h.includes('NAME')));
+    const fileIdCol   = header.findIndex(h => h.includes('FILE ID') || h.includes('FILEID'));
+    const graphicCol  = header.findIndex(h => h.includes('GRAPHIC') || h.includes('FILENAME') || (h.includes('FILE') && h.includes('NAME')));
     const scheduleCol = header.findIndex(h => h.includes('SCHEDULE'));
     const timeCol     = header.findIndex(h => h.includes('TIME'));
     const activeCol   = header.findIndex(h => h.includes('ACTIVE'));
 
     if (nameCol === -1) return;
 
-    // Reset everything — sheet is now the source of truth
-    ALL_HOPS = [];
-    HOP_INFO = {};
-    HOP_TASKS = {};
-    HOP_SCHEDULE = {};
+    // Build into temp arrays first — only replace live data when fully parsed
+    // This prevents a blank flash if render() is called mid-load
+    const newHops = [], newInfo = {}, newTasks = {}, newSchedule = {};
 
     // Known hop names that start with # — normalize if sheet omits the #
     const HASH_HOPS = ['ForTheLoveOfLawnFawnDies'];
@@ -2574,31 +2573,37 @@ async function loadHopMaster() {
       }
 
       const active = activeCol >= 0 ? (row[activeCol] || '').trim().toUpperCase() !== 'NO' : true;
-      ALL_HOPS.push(name);
+      newHops.push(name);
 
       const desc     = descCol >= 0     ? (row[descCol] || '').trim()     : '';
       const dm       = dmCol >= 0       ? (row[dmCol] || '').trim()       : '';
-      const graphic  = graphicCol >= 0  ? (row[graphicCol] || '').trim()  : '';
+      const fileId   = fileIdCol >= 0   ? (row[fileIdCol] || '').trim()   : '';
+      const graphic  = fileId; // Drive file ID — getHopGraphicUrl uses thumbnail endpoint
       const timeET   = timeCol >= 0     ? (row[timeCol] || '').trim()     : '';
       const schedRaw = scheduleCol >= 0 ? (row[scheduleCol] || '').trim() : '';
 
-      HOP_INFO[name] = { desc, dm, graphic };
+      newInfo[name] = { desc, dm, graphic };
 
       if (tasksCol >= 0) {
         const tasks = (row[tasksCol] || '').trim();
         if (tasks === '[]') {
-          HOP_TASKS[name] = [];
+          newTasks[name] = [];
         } else if (tasks) {
           const parsed = tasks.replace(/[\[\]]/g,'').split(',')
             .map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-          if (parsed.length > 0) HOP_TASKS[name] = parsed;
+          if (parsed.length > 0) newTasks[name] = parsed;
         }
       }
 
       const rule = parseScheduleRule(schedRaw);
-      if (rule || timeET) HOP_SCHEDULE[name] = { rule, timeET, active };
+      if (rule || timeET) newSchedule[name] = { rule, timeET, active };
     }
 
+    // Atomically swap globals — prevents blank flash during refresh
+    ALL_HOPS = newHops;
+    HOP_INFO = newInfo;
+    HOP_TASKS = newTasks;
+    HOP_SCHEDULE = newSchedule;
     masterLoaded = true;
     scheduleLoaded = true;
     render();
