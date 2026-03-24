@@ -2083,9 +2083,14 @@ function renderPrint() {
     <p>All hops for ${mn} with times in ${tzLabel}. Your joined hops highlighted.</p>
     <button class="print-btn" onclick="printList()">Print / Save as PDF — full list</button>
   </div>
+  <div class="print-section" style="background:linear-gradient(135deg,rgba(255,240,250,0.8),rgba(243,232,255,0.7));border-color:#e0a0d0;">
+    <h3 style="font-size:15px;color:#9d2089;">🗓️ Pretty Calendar — My Schedule Only</h3>
+    <p style="color:#7b2fbe;">Colorful monthly calendar showing only your joined hops. Great for printing or saving as PDF!</p>
+    <button class="print-btn" style="background:linear-gradient(135deg,#9d2089,#4B0082);color:#fff;border-color:#4B0082;font-weight:700;" onclick="printCalendarMySchedule()">🎨 Print Pretty Calendar — ${mn}</button>
+  </div>
   <div class="print-section">
     <h3>Print calendar view</h3>
-    <p>Full monthly calendar grid for ${mn}.</p>
+    <p>Full monthly calendar grid for ${mn} (all hops).</p>
     <button class="print-btn" onclick="printCal()">Print / Save as PDF — calendar</button>
   </div>
   <div class="print-section" style="background:rgba(243,232,255,0.5);border-color:#dcc6f0;">
@@ -2264,6 +2269,234 @@ function printCal() {
   <div class="footer">Created by @craftyengineer &nbsp;·&nbsp; Join our crafty chat group to get printable PDFs (DM to join)</div>
   </body></html>`;
   const w = window.open('','_blank'); w.document.write(body); w.document.close(); setTimeout(() => w.print(), 500);
+}
+
+function printCalendarMySchedule() {
+  const mn = MONTH_NAMES[vMonth];
+  const tzLabel = getTZLabel();
+  const myHops = ALL_HOPS.filter(n => joined[n]);
+
+  if (myHops.length === 0) {
+    alert("You haven't joined any hops yet! Go to All Hops and tap the circle next to the hops you've joined.");
+    return;
+  }
+
+  const firstDay = new Date(vYear, vMonth, 1).getDay();
+  const daysInMonth = new Date(vYear, vMonth + 1, 0).getDate();
+  const today = new Date();
+  const isCurrent = today.getFullYear() === vYear && today.getMonth() === vMonth;
+
+  // Build byDay — only joined hops
+  const byDay = {};
+  HOP_DATES.filter(h => joined[h.name]).forEach(h => {
+    if (!byDay[h.day]) byDay[h.day] = [];
+    byDay[h.day].push(h);
+  });
+
+  // Assign a consistent color index to each hop name
+  const hopColorMap = {};
+  let colorIdx = 0;
+  const PILL_COLORS = [
+    { bg: '#fce7f3', text: '#831843', border: '#f9a8d4' }, // pink
+    { bg: '#fef3c7', text: '#78350f', border: '#fcd34d' }, // amber
+    { bg: '#d1fae5', text: '#064e3b', border: '#6ee7b7' }, // green
+    { bg: '#e0f2fe', text: '#0c4a6e', border: '#7dd3fc' }, // sky
+    { bg: '#ede9fe', text: '#4c1d95', border: '#c4b5fd' }, // violet
+    { bg: '#fee2e2', text: '#7f1d1d', border: '#fca5a5' }, // red
+    { bg: '#ecfccb', text: '#365314', border: '#a3e635' }, // lime
+    { bg: '#fff7ed', text: '#7c2d12', border: '#fdba74' }, // orange
+    { bg: '#f0fdf4', text: '#14532d', border: '#86efac' }, // emerald
+    { bg: '#fdf4ff', text: '#701a75', border: '#e879f9' }, // fuchsia
+    { bg: '#f0f9ff', text: '#0c4a6e', border: '#38bdf8' }, // light blue
+    { bg: '#fefce8', text: '#713f12', border: '#fde047' }, // yellow
+  ];
+
+  // Sort joined hops by name so color assignment is stable
+  [...myHops].sort().forEach(name => {
+    hopColorMap[name] = colorIdx % PILL_COLORS.length;
+    colorIdx++;
+  });
+
+  // Build calendar grid cells
+  let cellsHtml = '';
+
+  // Empty leading cells
+  for (let i = 0; i < firstDay; i++) {
+    cellsHtml += `<td class="cal-cell empty"></td>`;
+  }
+
+  let col = firstDay;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const hops = byDay[d] || [];
+    const isPast = isCurrent && d < today.getDate();
+    const isToday = isCurrent && d === today.getDate();
+    const wd = DAY_SHORT[new Date(vYear, vMonth, d).getDay()];
+
+    const hopPills = hops.map(h => {
+      const ci = hopColorMap[h.name] !== undefined ? hopColorMap[h.name] : 0;
+      const c = PILL_COLORS[ci];
+      const timeStr = convertTime(h.et);
+      const label = h.sub ? h.sub : h.name;
+      const ok = okey(d, h.name, h.sub);
+      const taskIndices = getTasksForHop(h.name);
+      const doneCount = taskIndices.filter(i => tasksDone[tkey(ok, i)]).length;
+      const progBadge = doneCount > 0
+        ? `<span style="font-size:7px;background:rgba(75,0,130,0.15);color:#4B0082;border-radius:8px;padding:0 4px;margin-left:3px;font-weight:700;">${doneCount}/${taskIndices.length}</span>`
+        : '';
+      return `<div style="background:${c.bg};color:${c.text};border:1px solid ${c.border};border-radius:5px;padding:2px 5px;margin-bottom:2px;font-size:8.5px;line-height:1.35;font-weight:600;">
+        <span style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%;">${label}${progBadge}</span>
+        <span style="font-size:7.5px;font-weight:400;opacity:0.8;">${timeStr}</span>
+      </div>`;
+    }).join('');
+
+    const numStyle = isToday
+      ? `background:#4B0082;color:white;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;`
+      : `font-size:12px;font-weight:700;color:${isPast ? '#bbb' : '#4B0082'};`;
+
+    cellsHtml += `<td class="cal-cell${isPast ? ' past' : ''}${isToday ? ' today' : ''}${hops.length === 0 ? ' no-hops' : ''}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+        <span style="${numStyle}">${d}</span>
+        <span style="font-size:7.5px;color:#c9a7e8;font-weight:500;">${wd}</span>
+      </div>
+      ${hopPills}
+    </td>`;
+
+    col++;
+    if (col % 7 === 0 && d < daysInMonth) {
+      cellsHtml += '</tr><tr>';
+    }
+  }
+
+  // Trailing empty cells to complete the last row
+  const rem = (7 - (col % 7)) % 7;
+  for (let i = 0; i < rem; i++) {
+    cellsHtml += `<td class="cal-cell empty"></td>`;
+  }
+
+  // Build the legend (only joined hops, sorted)
+  const legendHtml = [...myHops].sort().map(name => {
+    const ci = hopColorMap[name] !== undefined ? hopColorMap[name] : 0;
+    const c = PILL_COLORS[ci];
+    const occ = HOP_DATES.filter(h => h.name === name).length;
+    return `<span style="display:inline-flex;align-items:center;gap:4px;background:${c.bg};color:${c.text};border:1px solid ${c.border};border-radius:20px;padding:3px 10px;font-size:9px;font-weight:600;white-space:nowrap;">${name}${occ > 1 ? ` <span style="opacity:0.7;font-weight:400;">×${occ}</span>` : ''}</span>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head>
+  <meta charset="utf-8">
+  <title>My Hop Calendar — ${mn} ${vYear}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, Arial, sans-serif; background: white; color: #222; }
+    .page { padding: 16px 18px 12px; }
+
+    /* Header */
+    .page-header {
+      background: linear-gradient(135deg, #4B0082 0%, #9d2089 60%, #FF6B9D 100%);
+      border-radius: 14px;
+      padding: 14px 18px 12px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .header-left { flex: 1; }
+    .page-title { font-size: 20px; font-weight: 800; color: white; line-height: 1.15; letter-spacing: -0.3px; }
+    .page-subtitle { font-size: 10px; color: rgba(255,255,255,0.75); margin-top: 3px; }
+    .month-badge {
+      background: rgba(255,255,255,0.22);
+      border: 2px solid rgba(255,255,255,0.45);
+      border-radius: 12px;
+      padding: 8px 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .month-badge .month-name { font-size: 18px; font-weight: 800; color: white; line-height: 1; }
+    .month-badge .year-name { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 2px; }
+    .hop-count-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 10px;
+      color: white;
+      font-weight: 600;
+      margin-top: 7px;
+    }
+
+    /* Calendar table */
+    .cal-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    .cal-dow { background: linear-gradient(180deg,#4B0082,#6a0dad); color: white; font-size: 10px; font-weight: 700; padding: 6px 4px; text-align: center; border: 1px solid #6a0dad; letter-spacing: 0.04em; }
+    .cal-cell {
+      border: 1px solid #ede8f8;
+      padding: 5px 4px 4px;
+      vertical-align: top;
+      height: 88px;
+      background: white;
+    }
+    .cal-cell.past { background: #fafafa; }
+    .cal-cell.past .vcal-hop { opacity: 0.6; }
+    .cal-cell.today { background: #fdf8ff; border: 2px solid #4B0082; }
+    .cal-cell.empty { background: #faf8ff; }
+    .cal-cell.no-hops { background: #fdfdff; }
+
+    /* Legend */
+    .legend-section {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #faf5ff;
+      border: 1.5px solid #e0d0f0;
+      border-radius: 12px;
+    }
+    .legend-title { font-size: 10px; font-weight: 700; color: #4B0082; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.07em; }
+    .legend-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    /* Footer */
+    .page-footer { margin-top: 10px; font-size: 8px; color: #ccc; text-align: center; }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { padding: 10px 12px 8px; }
+      @page { margin: 0.4in; size: landscape; }
+    }
+  </style></head><body>
+  <div class="page">
+
+    <div class="page-header">
+      <div class="header-left">
+        <div class="page-title">CraftyEngineer's<br>IG Hop Planner</div>
+        <div class="page-subtitle">@craftyengineer &nbsp;·&nbsp; @cardmakingIGHOPHQ &nbsp;·&nbsp; Times in ${tzLabel}</div>
+        <div class="hop-count-badge">🎨 My Schedule &nbsp;·&nbsp; ${myHops.length} hops joined</div>
+      </div>
+      <div class="month-badge">
+        <div class="month-name">${mn}</div>
+        <div class="year-name">${vYear}</div>
+      </div>
+    </div>
+
+    <table class="cal-table">
+      <tr>${DAY_SHORT.map(d => `<th class="cal-dow">${d}</th>`).join('')}</tr>
+      <tr>${cellsHtml}</tr>
+    </table>
+
+    <div class="legend-section">
+      <div class="legend-title">📌 My Hops — ${mn} ${vYear}</div>
+      <div class="legend-pills">${legendHtml}</div>
+    </div>
+
+    <div class="page-footer">
+      CraftyEngineer's Card Making IG Hop Planner &nbsp;·&nbsp; craftyengineer.com &nbsp;·&nbsp; @craftyengineer
+    </div>
+  </div>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(() => w.print(), 700);
 }
 
 // ═══════════════════════════════════════════════════════════════
