@@ -9,8 +9,7 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--p:#4B0082;--pl:#f3e8ff;--pm:#9d6bbf;--pb:#7b2fbe;--pd:#2d0050;}
-html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100%;}
-body{min-height:100vh;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
 body{
   background-color:#faf8ff;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='45' cy='60' r='28' fill='rgba(255,107,157,0.18)'/%3E%3Ccircle cx='190' cy='35' r='36' fill='rgba(255,179,71,0.15)'/%3E%3Ccircle cx='360' cy='80' r='22' fill='rgba(79,195,247,0.18)'/%3E%3Ccircle cx='80' cy='180' r='32' fill='rgba(129,199,132,0.16)'/%3E%3Ccircle cx='280' cy='150' r='40' fill='rgba(75,0,130,0.10)'/%3E%3Ccircle cx='420' cy='210' r='24' fill='rgba(255,107,157,0.14)'/%3E%3Ccircle cx='30' cy='300' r='34' fill='rgba(255,179,71,0.16)'/%3E%3Ccircle cx='160' cy='270' r='20' fill='rgba(129,199,132,0.18)'/%3E%3Ccircle cx='340' cy='320' r='38' fill='rgba(79,195,247,0.14)'/%3E%3Ccircle cx='70' cy='400' r='28' fill='rgba(75,0,130,0.12)'/%3E%3Ccircle cx='230' cy='380' r='24' fill='rgba(255,107,157,0.15)'/%3E%3Ccircle cx='400' cy='410' r='32' fill='rgba(255,179,71,0.14)'/%3E%3Ccircle cx='130' cy='100' r='18' fill='rgba(79,195,247,0.20)'/%3E%3Ccircle cx='310' cy='240' r='26' fill='rgba(255,107,157,0.13)'/%3E%3Ccircle cx='460' cy='140' r='20' fill='rgba(129,199,132,0.17)'/%3E%3Ccircle cx='55' cy='240' r='22' fill='rgba(255,179,71,0.13)'/%3E%3Ccircle cx='250' cy='90' r='30' fill='rgba(75,0,130,0.09)'/%3E%3Ccircle cx='140' cy='340' r='36' fill='rgba(255,107,157,0.12)'/%3E%3Ccircle cx='440' cy='340' r='20' fill='rgba(79,195,247,0.16)'/%3E%3Ccircle cx='380' cy='470' r='28' fill='rgba(129,199,132,0.15)'/%3E%3Ccircle cx='100' cy='460' r='24' fill='rgba(255,179,71,0.17)'/%3E%3Ccircle cx='270' cy='450' r='18' fill='rgba(75,0,130,0.11)'/%3E%3C/svg%3E");
@@ -1699,11 +1698,13 @@ function renderHops() {
         return aNext.day - bNext.day;
       });
 
-  html += `<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
-    <button onclick="toggleHopSort()" style="font-size:11px;padding:5px 12px;border-radius:14px;border:1.5px solid #c9a7e8;background:${hopSortAlpha ? '#f3e8ff' : '#4B0082'};color:${hopSortAlpha ? '#4B0082' : '#fff'};cursor:pointer;font-weight:500;">
-      ${hopSortAlpha ? '⇅ Sort by date' : '⇅ Sort A–Z'}
-    </button>
-  </div>`;
+  const sortBtnBg = hopSortAlpha ? '#f3e8ff' : '#4B0082';
+  const sortBtnColor = hopSortAlpha ? '#4B0082' : '#fff';
+  const sortBtnLabel = hopSortAlpha ? '⇅ Sort by date' : '⇅ Sort A–Z';
+  html += '<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">'
+       + '<button onclick="toggleHopSort()" style="font-size:11px;padding:5px 12px;border-radius:14px;border:1.5px solid #c9a7e8;background:' + sortBtnBg + ';color:' + sortBtnColor + ';cursor:pointer;font-weight:500;">'
+       + sortBtnLabel
+       + '</button></div>';
 
   html += sortedHops.map(name => {
     const on = !!joined[name];
