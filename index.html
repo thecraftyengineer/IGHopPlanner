@@ -491,9 +491,10 @@ async function loadFromSheets() {
       const desc = (row[1] || '').trim();
       const dm   = (row[2] || '').trim();
       const tasks = (row[3] || '').trim(); // e.g. "" = all, "[]" = none, "1,2,3,4,5,6" = no roll call
+      const graphic = (row[4] || '').trim(); // Drive file ID or URL
       if (!name) continue;
       ALL_HOPS.push(name);
-      HOP_INFO[name] = { desc, dm };
+      HOP_INFO[name] = { desc, dm, graphic };
       if (tasks === '[]') {
         HOP_TASKS[name] = [];
       } else if (tasks && tasks !== '') {
