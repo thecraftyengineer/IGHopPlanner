@@ -1458,7 +1458,7 @@ function convertTime(et) { return convertTimeIANA(et); }
 function okey(day, name, sub) { return `${vYear}-${vMonth}-${day}|${name}${sub ? '::' + sub : ''}`; }
 function tkey(ok, i) { return ok + '###' + i; }
 // Notes key — month-scoped only (not day), so one note per hop per month, kept forever
-function nkey(name, sub) { return `${vYear}-${vMonth}|${name}${sub ? '::' + sub : ''}`; }
+function nkey(day, name, sub) { return `${vYear}-${vMonth}-${day}|${name}${sub ? '::' + sub : ''}`; }
 function safe(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 function isDatePast(day) {
@@ -1695,7 +1695,7 @@ function renderLegend() {
 
 function buildHopCard(h, isPast) {
   const ok = okey(h.day, h.name, h.sub);   // day-scoped: for tasks (reset each month)
-  const nk = nkey(h.name, h.sub);           // month-scoped: for notes (kept forever)
+  const nk = nkey(h.day, h.name, h.sub);           // day-scoped: different note per occurrence
   const isOpen = !!expanded[ok];
   const isInfoOpen = !!infoOpen[ok];
   const taskIndices = getTasksForHop(h.name);
@@ -2094,152 +2094,97 @@ function printSchedule() {
   const myHops = ALL_HOPS.filter(n => joined[n]);
 
   if (myHops.length === 0) {
-    alert('You haven\'t joined any hops yet! Go to All Hops and tap the circle next to the hops you\'ve joined.');
+    alert("You haven't joined any hops yet! Go to All Hops and tap the circle next to the hops you've joined.");
     return;
   }
 
-  // Group joined hop occurrences by day
-  const byDay = {};
-  HOP_DATES.forEach(h => {
-    if (!joined[h.name]) return;
-    if (!byDay[h.day]) byDay[h.day] = [];
-    byDay[h.day].push(h);
-  });
-
-  // Also collect hops with no scheduled dates this month (joined but no occurrences)
-  const scheduledNames = new Set(HOP_DATES.filter(h => joined[h.name]).map(h => h.name));
-  const noDateHops = myHops.filter(n => !scheduledNames.has(n));
-
-  const days = Object.keys(byDay).map(Number).sort((a, b) => a - b);
-
-  // Build task checkbox row HTML
-  function taskRow(hopName, okKey) {
-    const tasks = getTasksForHop(hopName);
-    if (!tasks.length) return '';
-    return `<div class="task-row">${tasks.map((tk, i) => {
-      const done = !!tasksDone[okKey + '###' + i];
-      return `<label class="task-chip ${done ? 'done' : ''}"><span class="cb">${done ? '✓' : ''}</span>${tk.label}</label>`;
-    }).join('')}</div>`;
-  }
-
-  // Build day sections
-  let dayHTML = '';
-  days.forEach(d => {
-    const wd = DAY_NAMES[new Date(vYear, vMonth, d).getDay()];
-    const dateStr = `${wd}, ${mn} ${d}`;
+  // Build rows: one per hop occurrence, sorted by day
+  const rows = [];
+  const scheduledDays = [...new Set(HOP_DATES.filter(h => joined[h.name]).map(h => h.day))].sort((a,b)=>a-b);
+  scheduledDays.forEach(d => {
+    const wd = DAY_SHORT[new Date(vYear, vMonth, d).getDay()];
     const isPast = new Date(vYear, vMonth, d) < new Date(new Date().setHours(0,0,0,0));
-    dayHTML += `<div class="day-block ${isPast ? 'past' : ''}">
-      <div class="day-header">
-        <span class="day-date">${dateStr}</span>
-        ${isPast ? '<span class="past-badge">past</span>' : ''}
-      </div>
-      <div class="hops-grid">`;
-    byDay[d].forEach(h => {
-      const timeStr = convertTime(h.et);
-      const displayName = h.sub ? `${h.name} <span class="sub-label">${h.sub}</span>` : h.name;
+    HOP_DATES.filter(h => h.day === d && joined[h.name]).forEach(h => {
+      const taskIndices = getTasksForHop(h.name); // array of indices e.g. [0,1,2,3,4,5,6]
       const ok = okey(d, h.name, h.sub);
-      dayHTML += `<div class="hop-card">
-        <div class="hop-name">${displayName}</div>
-        <div class="hop-time">🕐 ${timeStr}</div>
-        ${taskRow(h.name, ok)}
-      </div>`;
+      const taskCells = ALL_TASKS.map((t, i) => {
+        if (!taskIndices.includes(i)) return '<td class="tc na"></td>';
+        const done = !!tasksDone[tkey(ok, i)];
+        return `<td class="tc ${done ? "done" : ""}">${done ? "&#10003;" : ""}</td>`;
+      }).join("");
+      const name = h.sub ? `${h.name} – ${h.sub}` : h.name;
+      const time = convertTime(h.et);
+      const noteVal = notes[nkey(d, h.name, h.sub)] || '';
+      rows.push(`<tr class="${isPast ? "past" : ""}">
+        <td class="date-cell">${wd} ${mn.slice(0,3)} ${d}</td>
+        <td class="name-cell">${name}</td>
+        <td class="time-cell">${time}</td>
+        ${taskCells}
+        <td class="notes-cell">${noteVal}</td>
+      </tr>`);
     });
-    dayHTML += `</div></div>`;
   });
 
-  // Hops with no dates this month
-  let noDateHTML = '';
-  if (noDateHops.length) {
-    noDateHTML = `<div class="no-date-section">
-      <div class="no-date-title">Joined hops — no scheduled dates in ${mn}</div>
-      <div class="hops-grid">${noDateHops.map(n => `<div class="hop-card muted"><div class="hop-name">${n}</div><div class="hop-time" style="color:#bbb;">No dates this month</div></div>`).join('')}</div>
-    </div>`;
-  }
+  // Short column headers for task columns
+  const shortLabels = ["Roll Call","Art Made","Photos","Post","Scheduled","Posted","Hopped"];
+  const taskHeaders = ALL_TASKS.map((t, i) =>
+    `<th class="th-task">${shortLabels[i] || t.label}</th>`
+  ).join("") + `<th class="th-notes">Notes</th>`;
 
   const html = `<!DOCTYPE html><html><head>
   <meta charset="utf-8">
   <title>My Schedule — ${mn} ${vYear}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Inter', Arial, sans-serif; background: #fff; color: #222; padding: 24px 28px; max-width: 900px; margin: 0 auto; }
-
-    /* Header */
-    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 3px solid #4B0082; }
-    .header-left {}
-    .page-title { font-size: 26px; font-weight: 800; color: #4B0082; line-height: 1.1; }
-    .page-subtitle { font-size: 12px; color: #9d6bbf; margin-top: 4px; }
-    .header-meta { text-align: right; font-size: 11px; color: #999; line-height: 1.7; }
-    .hop-count-badge { display: inline-block; background: #4B0082; color: #fff; font-size: 11px; font-weight: 700; border-radius: 12px; padding: 3px 10px; margin-top: 4px; }
-
-    /* Day blocks */
-    .day-block { margin-bottom: 18px; }
-    .day-block.past { opacity: 0.65; }
-    .day-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-    .day-date { font-size: 14px; font-weight: 700; color: #4B0082; background: #f3e8ff; padding: 4px 12px; border-radius: 20px; border-left: 4px solid #4B0082; }
-    .past-badge { font-size: 10px; color: #bbb; font-style: italic; }
-
-    /* Hop cards grid — 2 columns */
-    .hops-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-    .hop-card { background: #faf5ff; border: 1.5px solid #e9d5ff; border-radius: 10px; padding: 10px 12px; break-inside: avoid; }
-    .hop-card.muted { background: #fafafa; border-color: #eee; }
-    .hop-name { font-size: 12px; font-weight: 700; color: #2d0050; margin-bottom: 3px; line-height: 1.3; }
-    .sub-label { font-weight: 500; color: #7b2fbe; font-size: 11px; }
-    .hop-time { font-size: 11px; color: #7b2fbe; margin-bottom: 6px; }
-
-    /* Task chips */
-    .task-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; padding-top: 6px; border-top: 1px solid #e9d5ff; }
-    .task-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; background: #fff; border: 1px solid #d8b4fe; border-radius: 6px; padding: 3px 7px; color: #555; white-space: nowrap; }
-    .task-chip.done { background: #f3e8ff; border-color: #a855f7; color: #4B0082; font-weight: 600; }
-    .cb { display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; border: 1.5px solid #c9a7e8; border-radius: 3px; font-size: 9px; flex-shrink: 0; }
-    .task-chip.done .cb { background: #7c3aed; border-color: #7c3aed; color: #fff; }
-
-    /* No-date section */
-    .no-date-section { margin-top: 24px; padding-top: 14px; border-top: 1px dashed #d8b4fe; }
-    .no-date-title { font-size: 12px; color: #aaa; font-style: italic; margin-bottom: 8px; }
-
-    /* Footer */
-    .page-footer { margin-top: 28px; padding-top: 12px; border-top: 1px solid #e9d5ff; font-size: 10px; color: #bbb; text-align: center; line-height: 1.8; }
-
-    @media print {
-      body { padding: 12px 16px; }
-      .page-header { margin-bottom: 14px; }
-      .day-block { margin-bottom: 12px; }
-      .hop-card { border-color: #ccc; }
-    }
-  </style>
-  </head><body>
-
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #222; padding: 16px 20px; }
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 3px solid #4B0082; }
+    .page-title { font-size: 20px; font-weight: 800; color: #4B0082; line-height: 1.1; }
+    .page-subtitle { font-size: 10px; color: #9d6bbf; margin-top: 3px; }
+    .hop-badge { display: inline-block; background: #4B0082; color: #fff; font-size: 9px; font-weight: 700; border-radius: 8px; padding: 2px 8px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+    th { background: #4B0082; color: #fff; font-size: 9px; font-weight: 700; padding: 5px 4px; text-align: center; border: 1px solid #3a006f; white-space: nowrap; }
+    th.th-left { text-align: left; padding-left: 6px; }
+    td { border: 1px solid #e0d0f0; padding: 4px 5px; vertical-align: middle; }
+    tr:nth-child(even) td { background: #faf5ff; }
+    tr.past td { color: #aaa; }
+    .date-cell { white-space: nowrap; color: #4B0082; font-weight: 700; font-size: 9.5px; width: 68px; }
+    .name-cell { font-weight: 600; color: #2d0050; font-size: 10px; }
+    tr.past .name-cell { color: #bbb; font-weight: 400; }
+    .time-cell { white-space: nowrap; color: #7b2fbe; font-size: 9.5px; width: 58px; text-align: center; }
+    .tc { width: 44px; text-align: center; font-size: 12px; color: #7c3aed; font-weight: 700; }
+    .tc.na { background: #f0f0f0; }
+    .tc.done { background: #f3e8ff; color: #4B0082; }
+    .th-notes { text-align: left; padding-left: 6px; min-width: 80px; }
+    .notes-cell { font-size: 9px; color: #555; font-style: italic; min-width: 80px; }
+    .page-footer { margin-top: 10px; font-size: 8px; color: #bbb; text-align: center; }
+    @media print { body { padding: 10px 14px; } @page { margin: 0.5in; } }
+  </style></head><body>
   <div class="page-header">
-    <div class="header-left">
-      <div class="page-title">My Schedule</div>
-      <div class="page-subtitle">${mn} ${vYear} &nbsp;·&nbsp; Times in ${tzLabel}</div>
+    <div>
+      <div class="page-title">My Schedule — ${mn} ${vYear}</div>
+      <div class="page-subtitle">Times in ${tzLabel} &nbsp;&middot;&nbsp; craftyengineer.com &nbsp;&middot;&nbsp; @craftyengineer &nbsp;&middot;&nbsp; @cardmakingIGHOPHQ</div>
     </div>
-    <div class="header-meta">
-      craftyengineer.com<br>
-      @craftyengineer &nbsp;·&nbsp; @cardmakingIGHOPHQ<br>
-      <span class="hop-count-badge">${myHops.length} hops joined</span>
-    </div>
+    <div style="text-align:right;"><span class="hop-badge">${myHops.length} hops joined</span></div>
   </div>
-
-  ${dayHTML}
-  ${noDateHTML}
-
+  <table>
+    <thead><tr>
+      <th class="th-left">Date</th>
+      <th class="th-left">Hop</th>
+      <th>Time</th>
+      ${taskHeaders}
+    </tr></thead>
+    <tbody>${rows.join("")}</tbody>
+  </table>
   <div class="page-footer">
-    CraftyEngineer's Card Making IG Hop Planner &nbsp;·&nbsp; craftyengineer.com &nbsp;·&nbsp; @craftyengineer &nbsp;·&nbsp; @cardmakingIGHOPHQ<br>
-    Join our crafty chat group to get printable PDFs of all the hops (DM to join)
+    CraftyEngineer’s Card Making IG Hop Planner &nbsp;&middot;&nbsp; &#10003; = completed &nbsp;&middot;&nbsp; grey = not applicable for this hop
   </div>
-
   </body></html>`;
 
-  const w = window.open('', '_blank');
+  const w = window.open("", "_blank");
   w.document.write(html);
   w.document.close();
   setTimeout(() => w.print(), 600);
 }
-
-
 
 function printList() {
   const mn = MONTH_NAMES[vMonth];
