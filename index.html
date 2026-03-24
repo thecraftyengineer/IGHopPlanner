@@ -2376,6 +2376,10 @@ function render() {
   _okIdx = 0;
   HOP_DATES = getHopDates(vYear, vMonth + 1);
   document.getElementById('month-label').textContent = MONTH_NAMES[vMonth] + ' ' + vYear;
+  // Sync tab button highlight to activeTab (static HTML hardcodes Home as active)
+  document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+  const activeEl = document.getElementById('tab-' + activeTab);
+  if (activeEl) activeEl.classList.add('active');
   renderSummary();
   let html = '';
   if (activeTab === 'home') html = renderHome();
