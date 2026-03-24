@@ -2551,7 +2551,7 @@ async function loadHopMaster() {
     const dmCol       = header.findIndex(h => h.includes('DM') || h.includes('CONTACT'));
     const tasksCol    = header.findIndex(h => h.includes('TASK'));
     const fileIdCol   = header.findIndex(h => h.includes('FILE ID') || h.includes('FILEID'));
-    const graphicCol  = header.findIndex(h => h.includes('GRAPHIC') || h.includes('FILENAME') || (h.includes('FILE') && h.includes('NAME')));
+    const graphicCol  = header.findIndex(h => h.includes('GRAPHIC') || h.includes('FILENAME') || (h.includes('FILE') && h.includes('NAME') && !h.includes('HOP')));
     const scheduleCol = header.findIndex(h => h.includes('SCHEDULE'));
     const timeCol     = header.findIndex(h => h.includes('TIME'));
     const activeCol   = header.findIndex(h => h.includes('ACTIVE'));
