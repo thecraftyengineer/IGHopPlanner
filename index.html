@@ -10,6 +10,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--p:#4B0082;--pl:#f3e8ff;--pm:#9d6bbf;--pb:#7b2fbe;--pd:#2d0050;}
 html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+html{overflow-y:scroll;}
 body{
   background-color:#faf8ff;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='45' cy='60' r='28' fill='rgba(255,107,157,0.18)'/%3E%3Ccircle cx='190' cy='35' r='36' fill='rgba(255,179,71,0.15)'/%3E%3Ccircle cx='360' cy='80' r='22' fill='rgba(79,195,247,0.18)'/%3E%3Ccircle cx='80' cy='180' r='32' fill='rgba(129,199,132,0.16)'/%3E%3Ccircle cx='280' cy='150' r='40' fill='rgba(75,0,130,0.10)'/%3E%3Ccircle cx='420' cy='210' r='24' fill='rgba(255,107,157,0.14)'/%3E%3Ccircle cx='30' cy='300' r='34' fill='rgba(255,179,71,0.16)'/%3E%3Ccircle cx='160' cy='270' r='20' fill='rgba(129,199,132,0.18)'/%3E%3Ccircle cx='340' cy='320' r='38' fill='rgba(79,195,247,0.14)'/%3E%3Ccircle cx='70' cy='400' r='28' fill='rgba(75,0,130,0.12)'/%3E%3Ccircle cx='230' cy='380' r='24' fill='rgba(255,107,157,0.15)'/%3E%3Ccircle cx='400' cy='410' r='32' fill='rgba(255,179,71,0.14)'/%3E%3Ccircle cx='130' cy='100' r='18' fill='rgba(79,195,247,0.20)'/%3E%3Ccircle cx='310' cy='240' r='26' fill='rgba(255,107,157,0.13)'/%3E%3Ccircle cx='460' cy='140' r='20' fill='rgba(129,199,132,0.17)'/%3E%3Ccircle cx='55' cy='240' r='22' fill='rgba(255,179,71,0.13)'/%3E%3Ccircle cx='250' cy='90' r='30' fill='rgba(75,0,130,0.09)'/%3E%3Ccircle cx='140' cy='340' r='36' fill='rgba(255,107,157,0.12)'/%3E%3Ccircle cx='440' cy='340' r='20' fill='rgba(79,195,247,0.16)'/%3E%3Ccircle cx='380' cy='470' r='28' fill='rgba(129,199,132,0.15)'/%3E%3Ccircle cx='100' cy='460' r='24' fill='rgba(255,179,71,0.17)'/%3E%3Ccircle cx='270' cy='450' r='18' fill='rgba(75,0,130,0.11)'/%3E%3C/svg%3E");
@@ -2069,7 +2070,11 @@ function renderPrint() {
   return `
   <div class="print-section" style="background:linear-gradient(135deg,rgba(243,232,255,0.7),rgba(255,255,255,0.95));border-color:#c9a7e8;">
     <h3 style="font-size:15px;color:#4B0082;">⭐ Print My Schedule</h3>
-    <p>Your joined hops only (${myCount} hops) — pretty layout with task checkboxes, grouped by date. Perfect for printing or saving as PDF.</p>
+    <p>Your joined hops only (${myCount} hops) — compact table with task checkboxes and notes. Perfect for printing or saving as PDF.</p>
+    <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:#555;margin:10px 0 12px;cursor:pointer;">
+      <input type="checkbox" id="print-include-past" style="width:15px;height:15px;accent-color:#4B0082;">
+      Include hops that have already passed this month
+    </label>
     <button class="print-btn" style="background:#4B0082;color:#fff;border-color:#4B0082;font-weight:700;" onclick="printSchedule()">🖨️ Print My Schedule — ${mn}</button>
   </div>
   <div class="print-section">
@@ -2098,12 +2103,16 @@ function printSchedule() {
     return;
   }
 
+  const includePast = document.getElementById('print-include-past')?.checked ?? false;
+
   // Build rows: one per hop occurrence, sorted by day
   const rows = [];
+  const today0 = new Date(new Date().setHours(0,0,0,0));
   const scheduledDays = [...new Set(HOP_DATES.filter(h => joined[h.name]).map(h => h.day))].sort((a,b)=>a-b);
   scheduledDays.forEach(d => {
     const wd = DAY_SHORT[new Date(vYear, vMonth, d).getDay()];
-    const isPast = new Date(vYear, vMonth, d) < new Date(new Date().setHours(0,0,0,0));
+    const isPast = new Date(vYear, vMonth, d) < today0;
+    if (isPast && !includePast) return;
     HOP_DATES.filter(h => h.day === d && joined[h.name]).forEach(h => {
       const taskIndices = getTasksForHop(h.name); // array of indices e.g. [0,1,2,3,4,5,6]
       const ok = okey(d, h.name, h.sub);
@@ -2126,7 +2135,7 @@ function printSchedule() {
   });
 
   // Short column headers for task columns
-  const shortLabels = ["Roll Call","Art Made","Photos","Post","Scheduled","Posted","Hopped"];
+  const shortLabels = ["Roll Call","Art","Photos","Post","Sched.","Posted","Hopped"];
   const taskHeaders = ALL_TASKS.map((t, i) =>
     `<th class="th-task">${shortLabels[i] || t.label}</th>`
   ).join("") + `<th class="th-notes">Notes</th>`;
@@ -2148,14 +2157,14 @@ function printSchedule() {
     tr:nth-child(even) td { background: #faf5ff; }
     tr.past td { color: #aaa; }
     .date-cell { white-space: nowrap; color: #4B0082; font-weight: 700; font-size: 9.5px; width: 68px; }
-    .name-cell { font-weight: 600; color: #2d0050; font-size: 10px; }
+    .name-cell { font-weight: 600; color: #2d0050; font-size: 10px; width: 160px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     tr.past .name-cell { color: #bbb; font-weight: 400; }
-    .time-cell { white-space: nowrap; color: #7b2fbe; font-size: 9.5px; width: 58px; text-align: center; }
-    .tc { width: 44px; text-align: center; font-size: 12px; color: #7c3aed; font-weight: 700; }
+    .time-cell { white-space: nowrap; color: #7b2fbe; font-size: 9.5px; width: 52px; text-align: center; }
+    .tc { width: 36px; text-align: center; font-size: 12px; color: #7c3aed; font-weight: 700; }
     .tc.na { background: #f0f0f0; }
     .tc.done { background: #f3e8ff; color: #4B0082; }
-    .th-notes { text-align: left; padding-left: 6px; min-width: 80px; }
-    .notes-cell { font-size: 9px; color: #555; font-style: italic; min-width: 80px; }
+    .th-notes { text-align: left; padding-left: 6px; }
+    .notes-cell { font-size: 9px; color: #555; font-style: italic; }
     .page-footer { margin-top: 10px; font-size: 8px; color: #bbb; text-align: center; }
     @media print { body { padding: 10px 14px; } @page { margin: 0.5in; } }
   </style></head><body>
