@@ -256,6 +256,7 @@ body{
         <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
         <div class="month-label" id="month-label"></div>
         <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+        <button class="nav-btn" id="refresh-btn" onclick="refreshData()" title="Refresh schedule from sheet" style="font-size:14px;">&#8635;</button>
       </div>
     </div>
   </div>
@@ -320,21 +321,15 @@ const TASK_COLORS = [
 
 // ═══════════════════════════════════════════════════════════════
 // GOOGLE SHEETS CONFIG
-// Sheet ID: your spreadsheet
-// HOP_MASTER tab: master hop list with descriptions
-// Monthly tab: e.g. APRIL_2026, MAY_2026 etc.
 // ═══════════════════════════════════════════════════════════════
 const SHEET_ID = '1aWjVj9wQmBhZLtMbtbYXvvqHBMVo5EF-VD4x6ICrYZs';
-const SHEETS_API = 'https://sheets.googleapis.com/v4/spreadsheets';
 
-// These will be populated by loadFromSheets()
-// ALL_HOPS, HOP_INFO and HOP_TASKS are static — Sheet only adds new hops or updates descriptions
-// These will be overwritten by loadFromSheets() if/when Sheet connection is available
+// Populated from HOP_MASTER on load; hardcoded values below are fallbacks only
 let HOP_TASKS = {
   "Sharing Sunday": [],
 };
 
-const ALL_HOPS = [
+let ALL_HOPS = [
   "An Encouraging Word","ATC Scrapmakes","Birthday Bash",
   "Build Your Stash – Everyday Occasions","Card Clubhouse","Cardmaking YouTube",
   "Caroling Christmas","CASE IT","Clean & Simple (CAS)","Create 3 Ways",
@@ -402,188 +397,14 @@ const HOP_INFO = {
   "One Layer Cards":{desc:"Monthly on the last day of the month at 4PM ET. Create with just one layer — no layering papers!",dm:"@kydicreate or @kelleymakescards"},
 };
 let HOP_DATES = [];
-let dataLoaded = false;
-let dataError = false;
-
-// Refreshes HOP_DATES for the current month from static schedule + dynamic sheet data
-
-// Parse time string like "(11A ET USA)" or "(1:30P ET USA/6:30P UK)" into {h,m,p} object
-function parseTimeStr(raw) {
-  if (!raw) return null;
-  const s = raw.replace(/[()]/g,'').trim().toUpperCase();
-  if (s.includes('ANYTIME') || s === '') return null;
-  // Take the first time (before any slash)
-  const first = s.split('/')[0].trim();
-  // Match patterns like 11A, 1:30P, 12:25P, 9A
-  const m = first.match(/^(\d{1,2})(?::(\d{2}))?([AP])/);
-  if (!m) return null;
-  return { h: parseInt(m[1]), m: parseInt(m[2] || '0'), p: m[3] };
-}
-
-// Parse hop name — extract subtitle for National Holiday entries
-// e.g. "NATIONAL HOLIDAY - POPCORN LOVERS DAY" → name="National Holiday", sub="Popcorn Lovers Day"
-function parseHopName(raw) {
-  if (!raw) return { name: '', sub: null };
-  const s = raw.trim();
-  // Title case helper
-  const tc = str => str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-  if (s.toUpperCase().startsWith('NATIONAL HOLIDAY')) {
-    const parts = s.split(/\s*[-\u2013]\s*/);
-    const sub = parts.length > 1 ? tc(parts.slice(1).join(' - ')) : null;
-    return { name: 'National Holiday', sub };
-  }
-  return { name: tc(s), sub: null };
-}
-
-// Fetch a sheet range and return rows as arrays
-async function fetchRange(tabName, range) {
-  const url = `${SHEETS_API}/${SHEET_ID}/values/${encodeURIComponent(tabName + '!' + range)}?key=AIzaSyD-placeholder`;
-  // Note: for publicly shared sheets we don't actually need an API key for basic reads
-  // We use the export/gviz approach instead which works without any key
-  const gvizUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}`;
-  const resp = await fetch(gvizUrl);
-  if (!resp.ok) throw new Error('Failed to fetch sheet: ' + tabName);
-  const csv = await resp.text();
-  return parseCSV(csv);
-}
-
-function parseCSV(csv) {
-  const rows = [];
-  const lines = csv.split('\n');
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const row = [];
-    let inQuote = false, cell = '';
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQuote && line[i+1] === '"') { cell += '"'; i++; }
-        else inQuote = !inQuote;
-      } else if (ch === ',' && !inQuote) {
-        row.push(cell.trim()); cell = '';
-      } else {
-        cell += ch;
-      }
-    }
-    row.push(cell.trim());
-    rows.push(row);
-  }
-  return rows;
-}
-
-// Get current month tab name — tries APRIL_2026 format
-function currentMonthTab() {
-  const MONTH_UPPER = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE",
-    "JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
-  return MONTH_UPPER[vMonth] + '_' + vYear;
-}
-
-async function loadFromSheets() {
-  try {
-    showLoadingState(true);
-
-    // ── Load HOP_MASTER tab ──
-    const masterRows = await fetchRange('HOP_MASTER', 'A:F');
-    ALL_HOPS = [];
-    HOP_INFO = {};
-    HOP_TASKS = {};
-
-    // Skip header row
-    for (let i = 1; i < masterRows.length; i++) {
-      const row = masterRows[i];
-      const name = (row[0] || '').trim();
-      const desc = (row[1] || '').trim();
-      const dm   = (row[2] || '').trim();
-      const tasks = (row[3] || '').trim(); // e.g. "" = all, "[]" = none, "1,2,3,4,5,6" = no roll call
-      const graphic = (row[4] || '').trim(); // Drive file ID or URL
-      if (!name) continue;
-      ALL_HOPS.push(name);
-      HOP_INFO[name] = { desc, dm, graphic };
-      if (tasks === '[]') {
-        HOP_TASKS[name] = [];
-      } else if (tasks && tasks !== '') {
-        HOP_TASKS[name] = tasks.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-      }
-      // if tasks is blank, no entry in HOP_TASKS → defaults to all 7
-    }
-
-    // ── Load current month schedule tab ──
-    const tab = currentMonthTab();
-    let schedRows;
-    try {
-      schedRows = await fetchRange(tab, 'A:E');
-    } catch(e) {
-      // Month tab not found — use static schedule only (no National Holidays)
-      DYNAMIC_HOP_DATES = [];
-      dataLoaded = true;
-      showLoadingState(false);
-      render();
-      return;
-    }
-
-    DYNAMIC_HOP_DATES = [];
-    // Sheet monthly tab only contains National Holiday entries for 2026
-    // All other hops are calculated from SCHEDULE_2026
-    // Columns: A=Day, B=Hop Name, C=Time (ET), D=Subtitle
-    for (let i = 1; i < schedRows.length; i++) {
-      const row = schedRows[i];
-      const day = parseInt(row[0]);
-      if (isNaN(day) || day < 1) continue;
-      const rawName = (row[1] || '').trim();
-      if (!rawName) continue;
-      const { name, sub: autoSub } = parseHopName(rawName);
-      const sub = (row[3] || '').trim() || autoSub || null;
-      const et = parseTimeStr(row[2] || '');
-      DYNAMIC_HOP_DATES.push({ day, name, et, sub });
-    }
-
-    dataLoaded = true;
-    dataError = false;
-    showLoadingState(false);
-    render();
-
-  } catch(err) {
-    console.error('Sheet load error:', err);
-    // Fall back to static schedule — app still works without sheet connection
-    // Sheet is only needed for National Holidays and new hops
-    dataLoaded = true;
-    dataError = false;
-    DYNAMIC_HOP_DATES = [];
-    showLoadingState(false);
-    render();
-  }
-}
-
-function showLoadingState(loading) {
-  const view = document.getElementById('view');
-  if (!view) return;
-  if (loading) {
-    view.innerHTML = `<div style="text-align:center;padding:3rem 1rem;">
-      <div style="font-size:32px;margin-bottom:12px;">&#127912;</div>
-      <div style="font-size:14px;color:#7b2fbe;font-weight:500;">Loading hops...</div>
-      <div style="font-size:12px;color:#9d6bbf;margin-top:6px;">Fetching from Google Sheets</div>
-    </div>`;
-  }
-}
-
-function renderError() {
-  const view = document.getElementById('view');
-  if (!view) return;
-  view.innerHTML = `<div style="text-align:center;padding:2rem 1rem;">
-    <div style="font-size:32px;margin-bottom:12px;">&#9888;</div>
-    <div style="font-size:14px;color:#c2185b;font-weight:500;margin-bottom:8px;">Couldn't load hop data</div>
-    <div style="font-size:12px;color:#666;margin-bottom:16px;line-height:1.6;">Check your internet connection and try again. If the problem persists the sheet may need to be made public.</div>
-    <button onclick="loadFromSheets()" style="background:#4B0082;color:white;border:none;border-radius:10px;padding:10px 20px;font-size:13px;cursor:pointer;">Try again</button>
-  </div>`;
-}
 
 function getTasksForHop(n) {
   return HOP_TASKS[n] !== undefined ? HOP_TASKS[n] : [0,1,2,3,4,5,6];
 }
 
 // ═══════════════════════════════════════════════════════════════
-// FULL YEAR SCHEDULE — April through December 2026
-// National Holidays added monthly via Google Sheet
+// FALLBACK SCHEDULE — used if HOP_MASTER sheet is unavailable
+// When sheet loads successfully, computeSchedule() replaces this
 // ═══════════════════════════════════════════════════════════════
 const SCHEDULE_2026 = {
   3: [
@@ -1303,23 +1124,25 @@ const SCHEDULE_2026 = {
   ],
 };
 
-// Returns hop dates for current month, merging static schedule with
-// any National Holiday entries loaded from Google Sheet
-let DYNAMIC_HOP_DATES = [];
-let DYNAMIC_HOP_MONTH = null; // 1-indexed month these dates belong to
-let DYNAMIC_HOP_YEAR = null;
-
 function getHopDates(year, month) {
-  if (year !== 2026) return DYNAMIC_HOP_DATES;
-  const base = SCHEDULE_2026[month] || [];
-  // Only merge sheet dates if they belong to THIS specific month
-  const sheetDates = (DYNAMIC_HOP_MONTH === month && DYNAMIC_HOP_YEAR === year)
-    ? DYNAMIC_HOP_DATES : [];
-  return [...base, ...sheetDates].sort((a,b) => {
+  let base = [];
+
+  if (scheduleLoaded && Object.keys(HOP_SCHEDULE).length > 0) {
+    // Sheet-driven: compute from rules
+    base = computeSchedule(year, month);
+  } else if (year === 2026 && SCHEDULE_2026[month]) {
+    // Fallback: hardcoded schedule
+    base = SCHEDULE_2026[month];
+  }
+
+  // Merge events (one-time entries from EVENTS tab)
+  const cacheKey = `${year}-${month}`;
+  const events = EVENTS_CACHE[cacheKey] || [];
+
+  return [...base, ...events].sort((a, b) => {
     if (a.day !== b.day) return a.day - b.day;
-    // Sort by time within same day — null (Anytime) goes first
     const toMins = et => {
-      if (!et) return -1; // Anytime sorts first
+      if (!et) return -1;
       let h = et.h;
       if (et.p === 'P' && h !== 12) h += 12;
       if (et.p === 'A' && h === 12) h = 0;
@@ -1545,11 +1368,10 @@ function changeMonth(d) {
   if (vMonth > 11) { vMonth = 0; vYear++; }
   if (vMonth < 0) { vMonth = 11; vYear--; }
   showPast = false;
-  dataLoaded = false;
   saveState();
   render();
-  // Fetch National Holidays for the new month in background
-  loadNationalHolidays();
+  // Load events for the new month (uses cache if already loaded)
+  loadEvents(vYear, vMonth + 1);
 }
 
 function setTab(t) {
@@ -2590,15 +2412,125 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 // ═══════════════════════════════════════════════════════════════
-// LOAD HOP_MASTER FROM GOOGLE SHEET
-// Reads descriptions, DM contacts, tasks and graphic filenames
-// Falls back to hardcoded data if sheet unavailable
+// SCHEDULE COMPUTATION FROM HOP_MASTER RULES
+// ═══════════════════════════════════════════════════════════════
+
+// HOP_SCHEDULE stores rules loaded from sheet: { hopName: { rule, timeET, active } }
+let HOP_SCHEDULE = {};
+
+// Parse a schedule rule string into a structured object
+function parseScheduleRule(raw) {
+  if (!raw) return null;
+  const s = raw.trim();
+  const DAY_IDX = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
+  const ORD = { '1st':1, 'first':1, '2nd':2, 'second':2, '3rd':3, 'third':3, '4th':4, 'fourth':4 };
+
+  // every other DAY | anchor YYYY-MM-DD
+  const eoMatch = s.match(/every other (\w+)\|anchor (\d{4}-\d{2}-\d{2})/i);
+  if (eoMatch) {
+    const dayIdx = DAY_IDX[eoMatch[1].toLowerCase()];
+    const anchor = new Date(eoMatch[2] + 'T12:00:00');
+    return { type: 'everyOther', dayIdx, anchor };
+  }
+  // every DAY
+  const evMatch = s.match(/^every (\w+)$/i);
+  if (evMatch) {
+    const d = evMatch[1].toLowerCase();
+    const dayIdx = DAY_IDX[d];
+    if (dayIdx !== undefined) return { type: 'everyWeek', dayIdx };
+  }
+  // 2nd and 4th DAY
+  const dualMatch = s.match(/^(\w+) and (\w+) (\w+)$/i);
+  if (dualMatch) {
+    const ord1 = ORD[dualMatch[1].toLowerCase()];
+    const ord2 = ORD[dualMatch[2].toLowerCase()];
+    const dayIdx = DAY_IDX[dualMatch[3].toLowerCase()];
+    if (ord1 && ord2 && dayIdx !== undefined) return { type: 'nthAndMth', ords: [ord1, ord2], dayIdx };
+  }
+  // last Saturday / last day
+  const lastMatch = s.match(/^last (\w+)$/i);
+  if (lastMatch) {
+    const d = lastMatch[1].toLowerCase();
+    if (d === 'day') return { type: 'lastDay' };
+    const dayIdx = DAY_IDX[d];
+    if (dayIdx !== undefined) return { type: 'lastWeekday', dayIdx };
+  }
+  // fixed 20
+  const fixedMatch = s.match(/^fixed (\d+)$/i);
+  if (fixedMatch) return { type: 'fixed', date: parseInt(fixedMatch[1]) };
+  // 1st Tuesday / 3rd Friday etc.
+  const nthMatch = s.match(/^(\w+) (\w+)$/i);
+  if (nthMatch) {
+    const ord = ORD[nthMatch[1].toLowerCase()];
+    const dayIdx = DAY_IDX[nthMatch[2].toLowerCase()];
+    if (ord && dayIdx !== undefined) return { type: 'nth', ord, dayIdx };
+  }
+  return null;
+}
+
+// Compute all dates for a given rule in year/month (month is 1-indexed)
+function computeDatesForRule(rule, year, month) {
+  if (!rule) return [];
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const dates = [];
+  if (rule.type === 'everyWeek') {
+    for (let d = 1; d <= daysInMonth; d++)
+      if (new Date(year, month - 1, d).getDay() === rule.dayIdx) dates.push(d);
+  } else if (rule.type === 'everyOther') {
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month - 1, d);
+      if (date.getDay() !== rule.dayIdx) continue;
+      const diffDays = Math.round((date - rule.anchor) / 86400000);
+      if (Math.abs(diffDays) % 14 === 0) dates.push(d);
+    }
+  } else if (rule.type === 'nth') {
+    let count = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      if (new Date(year, month - 1, d).getDay() === rule.dayIdx) {
+        count++;
+        if (count === rule.ord) { dates.push(d); break; }
+      }
+    }
+  } else if (rule.type === 'nthAndMth') {
+    let count = 0;
+    for (let d = 1; d <= daysInMonth; d++) {
+      if (new Date(year, month - 1, d).getDay() === rule.dayIdx) {
+        count++;
+        if (rule.ords.includes(count)) dates.push(d);
+      }
+    }
+  } else if (rule.type === 'lastWeekday') {
+    for (let d = daysInMonth; d >= 1; d--) {
+      if (new Date(year, month - 1, d).getDay() === rule.dayIdx) { dates.push(d); break; }
+    }
+  } else if (rule.type === 'lastDay') {
+    dates.push(daysInMonth);
+  } else if (rule.type === 'fixed') {
+    if (rule.date <= daysInMonth) dates.push(rule.date);
+  }
+  return dates;
+}
+
+// Build computed hop dates from HOP_SCHEDULE rules for a month
+function computeSchedule(year, month) {
+  const result = [];
+  for (const [name, sched] of Object.entries(HOP_SCHEDULE)) {
+    if (!sched.active || !sched.rule) continue;
+    const dates = computeDatesForRule(sched.rule, year, month);
+    const et = sched.timeET ? parseSheetTime(sched.timeET) : null;
+    dates.forEach(day => result.push({ day, name, et, sub: null }));
+  }
+  return result;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SHEET LOADING — HOP_MASTER + EVENTS
 // ═══════════════════════════════════════════════════════════════
 const DRIVE_FOLDER_ID = '1RJtpAURLqGnsZKk9HPXU6toVW1Skb7U9';
 let masterLoaded = false;
+let scheduleLoaded = false;
 
 async function loadHopMaster() {
-  if (masterLoaded) return;
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=HOP_MASTER`;
     const resp = await fetch(url);
@@ -2607,97 +2539,139 @@ async function loadHopMaster() {
     const rows = parseSheetCSV(csv);
     if (rows.length < 2) return;
 
-    // Find columns by header name
     const header = rows[0].map(h => h.toUpperCase().trim());
-    const nameCol    = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
-    const descCol    = header.findIndex(h => h.includes('DESC'));
-    const dmCol      = header.findIndex(h => h.includes('DM') || h.includes('CONTACT'));
-    const tasksCol   = header.findIndex(h => h.includes('TASK'));
-    const graphicCol = header.findIndex(h => h.includes('GRAPHIC') || h.includes('IMAGE') || h.includes('FILE'));
+    const nameCol     = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const descCol     = header.findIndex(h => h.includes('DESC'));
+    const dmCol       = header.findIndex(h => h.includes('DM') || h.includes('CONTACT'));
+    const tasksCol    = header.findIndex(h => h.includes('TASK'));
+    const graphicCol  = header.findIndex(h => h.includes('FILE ID') || h.includes('FILEID') || (h.includes('FILE') && !h.includes('NAME')));
+    const scheduleCol = header.findIndex(h => h.includes('SCHEDULE'));
+    const timeCol     = header.findIndex(h => h.includes('TIME'));
+    const activeCol   = header.findIndex(h => h.includes('ACTIVE'));
 
     if (nameCol === -1) return;
+
+    // Reset everything — sheet is now the source of truth
+    ALL_HOPS = [];
+    HOP_INFO = {};
+    HOP_TASKS = {};
+    HOP_SCHEDULE = {};
 
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
       const name = (row[nameCol] || '').trim();
       if (!name) continue;
 
-      // Match to existing hop case-insensitively
-      const matchedName = ALL_HOPS.find(h => h.toLowerCase() === name.toLowerCase()) || name;
+      const active = activeCol >= 0 ? (row[activeCol] || '').trim().toUpperCase() !== 'NO' : true;
+      ALL_HOPS.push(name);
 
-      // Update HOP_INFO
-      const desc    = descCol >= 0    ? (row[descCol] || '').trim()    : '';
-      const dm      = dmCol >= 0      ? (row[dmCol] || '').trim()      : '';
-      const graphic = graphicCol >= 0 ? (row[graphicCol] || '').trim() : '';
+      const desc     = descCol >= 0     ? (row[descCol] || '').trim()     : '';
+      const dm       = dmCol >= 0       ? (row[dmCol] || '').trim()       : '';
+      const graphic  = graphicCol >= 0  ? (row[graphicCol] || '').trim()  : '';
+      const timeET   = timeCol >= 0     ? (row[timeCol] || '').trim()     : '';
+      const schedRaw = scheduleCol >= 0 ? (row[scheduleCol] || '').trim() : '';
 
-      // Always update HOP_INFO if any field is present (graphic may exist without desc/dm)
-      if (desc || dm || graphic) {
-        HOP_INFO[matchedName] = {
-          desc:    desc    || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].desc    : ''),
-          dm:      dm      || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].dm      : ''),
-          graphic: graphic || (HOP_INFO[matchedName] ? HOP_INFO[matchedName].graphic : '')
-        };
-      }
+      HOP_INFO[name] = { desc, dm, graphic };
 
-      // Update HOP_TASKS if tasks column has data
       if (tasksCol >= 0) {
         const tasks = (row[tasksCol] || '').trim();
         if (tasks === '[]') {
-          HOP_TASKS[matchedName] = [];
+          HOP_TASKS[name] = [];
         } else if (tasks) {
           const parsed = tasks.replace(/[\[\]]/g,'').split(',')
             .map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-          if (parsed.length > 0) HOP_TASKS[matchedName] = parsed;
+          if (parsed.length > 0) HOP_TASKS[name] = parsed;
         }
       }
+
+      const rule = parseScheduleRule(schedRaw);
+      if (rule || timeET) HOP_SCHEDULE[name] = { rule, timeET, active };
     }
+
     masterLoaded = true;
-    render(); // re-render with updated info
+    scheduleLoaded = true;
+    render();
   } catch(e) {
-    console.log('HOP_MASTER load skipped:', e.message);
+    console.log('HOP_MASTER load error:', e.message);
   }
 }
 
-// Returns graphic URL for a hop if available
-function getHopGraphicUrl(name) {
-  const info = HOP_INFO[name];
-  if (!info || !info.graphic) return null;
-  const g = info.graphic.trim();
-  // If it looks like a full URL, use it directly
-  if (g.startsWith('http')) return g;
-  // If it looks like a Drive file ID (long alphanumeric string, no extension)
-  if (g.length > 20 && !g.includes('.')) {
-    // Use thumbnail endpoint — more reliable than uc?export=view for public files
-    // sz=s800 requests up to 800px wide (Drive scales proportionally)
-    return `https://drive.google.com/thumbnail?id=${g}&sz=s800`;
+// EVENTS tab — one-time hops, National Holidays, cancellations
+let EVENTS_CACHE = {}; // keyed "YYYY-M" → [{ day, name, et, sub }]
+
+async function loadEvents(year, month) {
+  const cacheKey = `${year}-${month}`;
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=EVENTS`;
+    const resp = await fetch(url);
+    if (!resp.ok) return;
+    const csv = await resp.text();
+    const rows = parseSheetCSV(csv);
+    if (rows.length < 2) return;
+
+    const header = rows[0].map(h => h.toUpperCase().trim());
+    const dateCol   = header.findIndex(h => h.includes('DATE'));
+    const nameCol   = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const timeCol   = header.findIndex(h => h.includes('TIME'));
+    const subCol    = header.findIndex(h => h.includes('SUB'));
+    const activeCol = header.findIndex(h => h.includes('ACTIVE'));
+
+    if (dateCol === -1 || nameCol === -1) return;
+
+    const events = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const dateStr = (row[dateCol] || '').trim();
+      if (!dateStr) continue;
+      const parts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      if (!parts) continue;
+      const eYear = parseInt(parts[1]), eMonth = parseInt(parts[2]), eDay = parseInt(parts[3]);
+      if (eYear !== year || eMonth !== month) continue;
+
+      const active = activeCol >= 0 ? (row[activeCol] || '').trim().toUpperCase() !== 'NO' : true;
+      if (!active) continue;
+
+      const rawName = (row[nameCol] || '').trim();
+      if (!rawName) continue;
+
+      const matched = ALL_HOPS.find(h => h.toLowerCase() === rawName.toLowerCase());
+      let finalName = matched || rawName;
+      let finalSub = subCol >= 0 ? (row[subCol] || '').trim() || null : null;
+
+      // National Holiday handling
+      if (!matched && rawName.toUpperCase().startsWith('NATIONAL')) {
+        finalName = 'National Holiday';
+        if (!finalSub) {
+          finalSub = rawName.replace(/^NATIONAL\s+HOLIDAY\s*/i,'').replace(/^NATIONAL\s*/i,'').trim();
+        }
+        if (finalSub) finalSub = finalSub.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+      }
+
+      const timeRaw = timeCol >= 0 ? (row[timeCol] || '').trim() : '';
+      const et = timeRaw ? parseSheetTime(timeRaw)
+        : (HOP_SCHEDULE[finalName] ? parseSheetTime(HOP_SCHEDULE[finalName].timeET) : null);
+
+      events.push({ day: eDay, name: finalName, et, sub: finalSub });
+    }
+
+    EVENTS_CACHE[cacheKey] = events;
+    render();
+  } catch(e) {
+    console.log('EVENTS load error:', e.message);
+    EVENTS_CACHE[cacheKey] = EVENTS_CACHE[cacheKey] || [];
   }
-  // Otherwise treat as filename in the shared folder
-  // Note: Google Drive doesn't support fetch-by-filename directly
-  // So store file IDs in column E for best results
-  return null;
 }
 
-// Returns a fallback Drive URL to try if the primary fails
-function getHopGraphicFallbackUrl(name) {
-  const info = HOP_INFO[name];
-  if (!info || !info.graphic) return null;
-  const g = info.graphic.trim();
-  if (g.length > 20 && !g.includes('.') && !g.startsWith('http')) {
-    return `https://lh3.googleusercontent.com/d/${g}`;
-  }
-  return null;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// GOOGLE SHEET — National Holidays only
-// Fetches the current month tab and merges National Holiday rows
-// into DYNAMIC_HOP_DATES. App renders fine without it.
-// ═══════════════════════════════════════════════════════════════
-
-function currentMonthTabName() {
-  const MONTH_UPPER = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE",
-    "JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
-  return MONTH_UPPER[vMonth] + '_' + vYear;
+// Manual refresh — reloads HOP_MASTER and EVENTS for current month
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  if (btn) { btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none'; }
+  masterLoaded = false;
+  scheduleLoaded = false;
+  delete EVENTS_CACHE[`${vYear}-${vMonth + 1}`];
+  await loadHopMaster();
+  await loadEvents(vYear, vMonth + 1);
+  if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
 }
 
 function parseSheetCSV(csv) {
@@ -2732,70 +2706,35 @@ function parseSheetTime(raw) {
   return { h: parseInt(m[1]), m: parseInt(m[2] || '0'), p: m[3] };
 }
 
-async function loadNationalHolidays() {
-  // Always clear first so previous month's holidays don't bleed into new month
-  DYNAMIC_HOP_DATES = [];
-  DYNAMIC_HOP_MONTH = null;
-  DYNAMIC_HOP_YEAR = null;
-  render();
-  try {
-    const tab = currentMonthTabName();
-    // Use export URL with CSV format — works better with CORS from embedded contexts
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
-    const resp = await fetch(url);
-    if (!resp.ok) return; // silently fail — static data still works
-
-    const csv = await resp.text();
-    const rows = parseSheetCSV(csv);
-
-    // Find header row to locate columns by name
-    if (rows.length < 2) return;
-    const header = rows[0].map(h => h.toUpperCase().trim());
-    const dayCol  = header.findIndex(h => h.includes('DAY'));
-    const nameCol = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
-    const timeCol = header.findIndex(h => h.includes('TIME'));
-    const subCol  = header.findIndex(h => h.includes('SUB'));
-
-    if (dayCol === -1 || nameCol === -1) return;
-
-    const sheetHops = [];
-    for (let i = 1; i < rows.length; i++) {
-      const row = rows[i];
-      const day = parseInt(row[dayCol]);
-      if (isNaN(day) || day < 1) continue;
-      const name = (row[nameCol] || '').trim();
-      if (!name) continue;
-      // Add any hop from the sheet — National Holidays, new hops, anything
-      const sub = subCol >= 0 ? (row[subCol] || '').trim() : null;
-      const et = timeCol >= 0 ? parseSheetTime(row[timeCol]) : null;
-      // First check if name matches an existing hop in ALL_HOPS (case-insensitive)
-      const exactMatch = ALL_HOPS.find(h => h.toLowerCase() === name.toLowerCase());
-      let finalName = exactMatch || name;
-      let finalSub = sub;
-
-      // Only treat as National Holiday if it's NOT already matched to a specific hop
-      if (!exactMatch && name.toUpperCase().startsWith('NATIONAL')) {
-        finalName = 'National Holiday';
-        if (!finalSub) {
-          finalSub = name.replace(/^NATIONAL\s+HOLIDAY\s*/i,'').replace(/^NATIONAL\s*/i,'').trim();
-        }
-        if (finalSub) finalSub = finalSub.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-      }
-      sheetHops.push({ day, name: finalName, et, sub: finalSub || null });
-    }
-
-    // Store with month/year so they only apply to the correct month
-    DYNAMIC_HOP_DATES = sheetHops;
-    DYNAMIC_HOP_MONTH = vMonth + 1; // 1-indexed
-    DYNAMIC_HOP_YEAR = vYear;
-    render();
-  } catch(e) {
-    // Silently fail — app works fine without sheet
-    DYNAMIC_HOP_DATES = [];
-    render();
+// Returns graphic URL for a hop if available
+function getHopGraphicUrl(name) {
+  const info = HOP_INFO[name];
+  if (!info || !info.graphic) return null;
+  const g = info.graphic.trim();
+  // If it looks like a full URL, use it directly
+  if (g.startsWith('http')) return g;
+  // If it looks like a Drive file ID (long alphanumeric string, no extension)
+  if (g.length > 20 && !g.includes('.')) {
+    // Use thumbnail endpoint — more reliable than uc?export=view for public files
+    // sz=s800 requests up to 800px wide (Drive scales proportionally)
+    return `https://drive.google.com/thumbnail?id=${g}&sz=s800`;
   }
+  // Otherwise treat as filename in the shared folder
+  // Note: Google Drive doesn't support fetch-by-filename directly
+  // So store file IDs in column E for best results
+  return null;
 }
 
+// Returns a fallback Drive URL to try if the primary fails
+function getHopGraphicFallbackUrl(name) {
+  const info = HOP_INFO[name];
+  if (!info || !info.graphic) return null;
+  const g = info.graphic.trim();
+  if (g.length > 20 && !g.includes('.') && !g.startsWith('http')) {
+    return `https://lh3.googleusercontent.com/d/${g}`;
+  }
+  return null;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // GOOGLE DRIVE SYNC
@@ -3014,7 +2953,7 @@ function checkSavedDriveToken() {
   activeTab = hasSavedState ? 'hops' : 'home';
   render();
   loadHopMaster();
-  loadNationalHolidays();
+  loadEvents(vYear, vMonth + 1);
 })();
 </script>
 </body>
