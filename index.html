@@ -2557,10 +2557,17 @@ async function loadHopMaster() {
     HOP_TASKS = {};
     HOP_SCHEDULE = {};
 
+    // Known hop names that start with # — normalize if sheet omits the #
+    const HASH_HOPS = ['ForTheLoveOfLawnFawnDies'];
+
     for (let i = 1; i < rows.length; i++) {
       const row = rows[i];
-      const name = (row[nameCol] || '').trim();
+      let name = (row[nameCol] || '').trim();
       if (!name) continue;
+      // Re-add # prefix if the sheet accidentally stripped it
+      if (HASH_HOPS.some(h => name === h || name === '#' + h)) {
+        name = '#' + name.replace(/^#/, '');
+      }
 
       const active = activeCol >= 0 ? (row[activeCol] || '').trim().toUpperCase() !== 'NO' : true;
       ALL_HOPS.push(name);
@@ -2675,24 +2682,32 @@ async function refreshData() {
 }
 
 function parseSheetCSV(csv) {
+  // Proper CSV parser: handles quoted cells containing commas, newlines, and escaped quotes.
+  // Must scan character-by-character across the full text — NOT split on \n first,
+  // because Google Sheets wraps multi-line cell content in quotes with embedded \n.
   const rows = [];
-  const lines = csv.split('\n');
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    const row = [];
-    let inQuote = false, cell = '';
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') {
-        if (inQuote && line[i+1] === '"') { cell += '"'; i++; }
-        else inQuote = !inQuote;
-      } else if (ch === ',' && !inQuote) {
-        row.push(cell.trim()); cell = '';
-      } else { cell += ch; }
+  let row = [], cell = '', inQuote = false;
+  for (let i = 0; i < csv.length; i++) {
+    const ch = csv[i];
+    const next = csv[i + 1];
+    if (inQuote) {
+      if (ch === '"' && next === '"') { cell += '"'; i++; }       // escaped quote ""
+      else if (ch === '"') { inQuote = false; }                   // closing quote
+      else { cell += ch; }                                        // content inside quotes (may be \n)
+    } else {
+      if (ch === '"') { inQuote = true; }                         // opening quote
+      else if (ch === ',') { row.push(cell.trim()); cell = ''; }  // field separator
+      else if (ch === '\n') {                                      // row separator
+        row.push(cell.trim());
+        if (row.some(c => c !== '')) rows.push(row);              // skip fully blank rows
+        row = []; cell = '';
+      } else if (ch === '\r') { /* skip CR */ }
+      else { cell += ch; }
     }
-    row.push(cell.trim());
-    rows.push(row);
   }
+  // flush last row
+  row.push(cell.trim());
+  if (row.some(c => c !== '')) rows.push(row);
   return rows;
 }
 
