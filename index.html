@@ -1135,11 +1135,13 @@ function getHopDates(year, month) {
     base = SCHEDULE_2026[month];
   }
 
-  // Merge events (one-time entries from EVENTS tab)
+  // Merge events — events take precedence; remove any base entry with same name+day
   const cacheKey = `${year}-${month}`;
   const events = EVENTS_CACHE[cacheKey] || [];
+  const eventKeys = new Set(events.map(e => `${e.day}|${e.name}`));
+  const filteredBase = base.filter(h => !eventKeys.has(`${h.day}|${h.name}`));
 
-  return [...base, ...events].sort((a, b) => {
+  return [...filteredBase, ...events].sort((a, b) => {
     if (a.day !== b.day) return a.day - b.day;
     const toMins = et => {
       if (!et) return -1;
