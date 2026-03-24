@@ -9,7 +9,8 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{--p:#4B0082;--pl:#f3e8ff;--pm:#9d6bbf;--pb:#7b2fbe;--pd:#2d0050;}
-html,body{min-height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+html,body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100%;}
+body{min-height:100vh;}
 body{
   background-color:#faf8ff;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='500' height='500'%3E%3Ccircle cx='45' cy='60' r='28' fill='rgba(255,107,157,0.18)'/%3E%3Ccircle cx='190' cy='35' r='36' fill='rgba(255,179,71,0.15)'/%3E%3Ccircle cx='360' cy='80' r='22' fill='rgba(79,195,247,0.18)'/%3E%3Ccircle cx='80' cy='180' r='32' fill='rgba(129,199,132,0.16)'/%3E%3Ccircle cx='280' cy='150' r='40' fill='rgba(75,0,130,0.10)'/%3E%3Ccircle cx='420' cy='210' r='24' fill='rgba(255,107,157,0.14)'/%3E%3Ccircle cx='30' cy='300' r='34' fill='rgba(255,179,71,0.16)'/%3E%3Ccircle cx='160' cy='270' r='20' fill='rgba(129,199,132,0.18)'/%3E%3Ccircle cx='340' cy='320' r='38' fill='rgba(79,195,247,0.14)'/%3E%3Ccircle cx='70' cy='400' r='28' fill='rgba(75,0,130,0.12)'/%3E%3Ccircle cx='230' cy='380' r='24' fill='rgba(255,107,157,0.15)'/%3E%3Ccircle cx='400' cy='410' r='32' fill='rgba(255,179,71,0.14)'/%3E%3Ccircle cx='130' cy='100' r='18' fill='rgba(79,195,247,0.20)'/%3E%3Ccircle cx='310' cy='240' r='26' fill='rgba(255,107,157,0.13)'/%3E%3Ccircle cx='460' cy='140' r='20' fill='rgba(129,199,132,0.17)'/%3E%3Ccircle cx='55' cy='240' r='22' fill='rgba(255,179,71,0.13)'/%3E%3Ccircle cx='250' cy='90' r='30' fill='rgba(75,0,130,0.09)'/%3E%3Ccircle cx='140' cy='340' r='36' fill='rgba(255,107,157,0.12)'/%3E%3Ccircle cx='440' cy='340' r='20' fill='rgba(79,195,247,0.16)'/%3E%3Ccircle cx='380' cy='470' r='28' fill='rgba(129,199,132,0.15)'/%3E%3Ccircle cx='100' cy='460' r='24' fill='rgba(255,179,71,0.17)'/%3E%3Ccircle cx='270' cy='450' r='18' fill='rgba(75,0,130,0.11)'/%3E%3C/svg%3E");
@@ -182,6 +183,10 @@ body{
 .drive-btn.connect:hover{background:#6a0dad;}
 .drive-btn.disconnect{background:#f3e8ff;color:#4B0082;border:1px solid #e0d0f0;}
 .drive-sync-indicator{font-size:10px;color:#9d6bbf;margin-left:4px;}
+.bmc-bar{text-align:center;padding:8px 12px 4px;font-size:11px;}
+.bmc-btn{display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-weight:700;font-size:12px;padding:7px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);transition:opacity 0.15s;}
+.bmc-btn:hover{opacity:0.88;}
+.bmc-btn .bmc-icon{font-size:15px;}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -230,7 +235,7 @@ body{
       <option value="11">New Zealand (NZST)</option>
     </select>
     <button class="tz-btn" onclick="saveTZ()">Let's go!</button>
-    <div class="tz-note">You can change this any time from the My Hops tab.</div>
+    <div class="tz-note">You can change this any time from the All Hops tab.</div>
   </div>
 </div>
 
@@ -266,8 +271,8 @@ body{
   </div>
 
   <div class="tabs">
-    <div class="tab active" id="tab-hops" onclick="setTab('hops')">My Hops</div>
-    <div class="tab" id="tab-schedule" onclick="setTab('schedule')">Schedule</div>
+    <div class="tab active" id="tab-hops" onclick="setTab('hops')">All Hops</div>
+    <div class="tab" id="tab-schedule" onclick="setTab('schedule')">My Schedule</div>
     <div class="tab" id="tab-calendar" onclick="setTab('calendar')">Calendar</div>
     <div class="tab" id="tab-info" onclick="setTab('info')">Hop Info</div>
     <div class="tab" id="tab-print" onclick="setTab('print')">Print</div>
@@ -275,6 +280,11 @@ body{
 
   <div id="view"></div>
 
+  <div class="bmc-bar">
+    <a class="bmc-btn" href="https://buymeacoffee.com/craftyengineer" target="_blank" rel="noopener">
+      <span class="bmc-icon">☕</span> Buy me a coffee
+    </a>
+  </div>
   <div class="app-footer">craftyengineer.com &nbsp;·&nbsp; @craftyengineer &nbsp;·&nbsp; @cardmakingIGHOPHQ</div>
 </div>
 
@@ -1341,7 +1351,7 @@ const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 // ═══════════════════════════════════════════════════════════════
 let vYear = 2026, vMonth = 2;
 let joined = {}, tasksDone = {}, notes = {}, expanded = {}, infoExpanded = {}, infoOpen = {};
-let activeTab = 'hops', userTZ = -5, showPast = false;
+let activeTab = 'hops', userTZ = -5, showPast = false, hopSortAlpha = true;
 
 // Test if localStorage is available (Safari private mode blocks it)
 function storageAvailable() {
@@ -1663,17 +1673,39 @@ function buildHopCard(h, isPast) {
   </div>`;
 }
 
+function toggleHopSort() {
+  hopSortAlpha = !hopSortAlpha;
+  render();
+}
+
 function renderHops() {
   const tzLabel = TZ_LABELS[String(userTZ)] || 'Local';
   const mn = MONTH_NAMES[vMonth];
   let html = `<div class="hint-box">
     <div class="hint-step"><div class="hint-num">1</div><div class="hint-text">Select the hops you have joined for <strong>${mn}</strong> by tapping the circle next to each one.</div></div>
-    <div class="hint-step"><div class="hint-num">2</div><div class="hint-text">Your selected hops appear in the <strong>Schedule</strong> tab sorted by date, with a task checklist for each occurrence.</div></div>
+    <div class="hint-step"><div class="hint-num">2</div><div class="hint-text">Your selected hops appear in the <strong>My Schedule</strong> tab sorted by date, with a task checklist for each occurrence.</div></div>
     <div class="hint-step"><div class="hint-num">3</div><div class="hint-text">The <strong>Calendar</strong> and <strong>Hop Info</strong> tabs show all hops — yours highlighted in purple.</div></div>
     <div style="font-size:11px;color:#9d6bbf;margin-top:8px;">Times shown in <strong>${tzLabel}</strong>. <span class="tz-badge" onclick="changeTZ()">&#9998; Change time zone</span></div>
   </div><div class="section-card">`;
 
-  html += ALL_HOPS.map(name => {
+  const sortedHops = hopSortAlpha
+    ? [...ALL_HOPS]
+    : [...ALL_HOPS].sort((a, b) => {
+        const aNext = getHopDates(vYear, vMonth + 1).find(h => h.name === a);
+        const bNext = getHopDates(vYear, vMonth + 1).find(h => h.name === b);
+        if (!aNext && !bNext) return 0;
+        if (!aNext) return 1;
+        if (!bNext) return -1;
+        return aNext.day - bNext.day;
+      });
+
+  html += `<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+    <button onclick="toggleHopSort()" style="font-size:11px;padding:5px 12px;border-radius:14px;border:1.5px solid #c9a7e8;background:${hopSortAlpha ? '#f3e8ff' : '#4B0082'};color:${hopSortAlpha ? '#4B0082' : '#fff'};cursor:pointer;font-weight:500;">
+      ${hopSortAlpha ? '⇅ Sort by date' : '⇅ Sort A–Z'}
+    </button>
+  </div>`;
+
+  html += sortedHops.map(name => {
     const on = !!joined[name];
     // Use full hop dates for current month including sheet-loaded holidays
     const occ = getHopDates(vYear, vMonth + 1).filter(h => h.name === name).length;
@@ -1701,7 +1733,7 @@ function renderHops() {
 function renderSchedule() {
   const mn = MONTH_NAMES[vMonth];
   const myDates = HOP_DATES.filter(h => joined[h.name]);
-  if (!myDates.length) return `<div class="hint-box"><div class="hint-step"><div class="hint-num">!</div><div class="hint-text">You haven't selected any hops for <strong>${mn}</strong> yet. Go to <strong>My Hops</strong> and tap the circle next to each hop you've joined.</div></div></div>`;
+  if (!myDates.length) return `<div class="hint-box"><div class="hint-step"><div class="hint-num">!</div><div class="hint-text">You haven't selected any hops for <strong>${mn}</strong> yet. Go to <strong>All Hops</strong> and tap the circle next to each hop you've joined.</div></div></div>`;
 
   const byDay = {};
   myDates.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
@@ -1738,6 +1770,31 @@ function renderSchedule() {
       </div>`;
     }).join('');
   }
+
+  // Buffer: show joined hops from the first 7 days of next month
+  const nextMonth = vMonth === 11 ? 0 : vMonth + 1;
+  const nextYear  = vMonth === 11 ? vYear + 1 : vYear;
+  const nextMn    = MONTH_NAMES[nextMonth];
+  const bufferDates = getHopDates(nextYear, nextMonth + 1)
+    .filter(h => joined[h.name] && h.day <= 7);
+  if (bufferDates.length) {
+    const bufByDay = {};
+    bufferDates.forEach(h => { if (!bufByDay[h.day]) bufByDay[h.day] = []; bufByDay[h.day].push(h); });
+    const bufDays = Object.keys(bufByDay).map(Number).sort((a,b) => a-b);
+    html += `<div class="day-group" style="margin-top:18px;">
+      <div class="day-header" style="background:linear-gradient(90deg,#e8d5f5,#f3e8ff);color:#7b2fbe;font-size:11px;letter-spacing:0.03em;">
+        ── Coming up in ${nextMn} ──
+      </div>
+    </div>`;
+    html += bufDays.map(day => {
+      const wd = new Date(nextYear, nextMonth, day).getDay();
+      return `<div class="day-group">
+        <div class="day-header" style="opacity:0.75;">${DAY_NAMES[wd]}, ${nextMn} ${day}</div>
+        ${bufByDay[day].map(h => buildHopCard(h, false)).join('')}
+      </div>`;
+    }).join('');
+  }
+
   return html;
 }
 
@@ -1918,7 +1975,29 @@ function render() {
   else if (activeTab === 'info') html = renderInfo();
   else html = renderPrint();
   document.getElementById('view').innerHTML = html;
+  notifyHeight();
 }
+
+// Tell Google Sites (or any parent iframe) how tall we are so it resizes
+function notifyHeight() {
+  try {
+    const h = document.body.scrollHeight;
+    // Google Sites iframe resizer protocol
+    window.parent.postMessage({ type: 'resize', height: h }, '*');
+    // Also try the common iFrameResizer message format
+    window.parent.postMessage(JSON.stringify({ id: 'iFrameResizer', type: 'size', height: h }), '*');
+  } catch(e) {}
+}
+
+// Re-notify on images loading (graphics can expand the page height)
+document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('load', e => {
+    if (e.target.tagName === 'IMG') notifyHeight();
+  }, true);
+  // Also poll briefly after first render to catch late-loading content
+  setTimeout(notifyHeight, 500);
+  setTimeout(notifyHeight, 1500);
+});
 
 
 
