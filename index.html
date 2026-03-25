@@ -3324,4 +3324,33 @@ async function translateDOM() {
 // ═══════════════════════════════════════════════════════════════
 (function init() {
   const hasSavedState = loadState();
-  // Pre-select the right timezone in the dro
+  // Pre-select the right timezone in the dropdown (IANA string match)
+  const sel = document.getElementById('tz-select');
+  if (sel) {
+    for (let i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === userTZ) {
+        sel.selectedIndex = i;
+        break;
+      }
+    }
+  }
+  if (!HAS_STORAGE) {
+    setTimeout(() => {
+      const w = document.getElementById('storage-warning');
+      if (w) w.style.display = 'block';
+    }, 500);
+  }
+  // Check for saved Drive token
+  checkSavedDriveToken();
+  // Always show app (Home tab is now the first tab)
+  document.getElementById('tz-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  // New users land on Home tab; returning users go straight to All Hops
+  activeTab = hasSavedState ? 'hops' : 'home';
+  render();
+  loadHopMaster();
+  loadEvents(vYear, vMonth + 1);
+})();
+</script>
+</body>
+</html>
