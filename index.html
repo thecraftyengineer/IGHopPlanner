@@ -192,12 +192,21 @@ body{
 .translate-bar{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:6px;font-size:11px;color:#9d6bbf;}
 .translate-bar .goog-te-gadget{font-size:0 !important;font-family:inherit !important;}
 .translate-bar .goog-te-gadget .goog-te-combo{font-size:12px;padding:4px 6px;border:1.5px solid #e0d0f0;border-radius:8px;color:#4B0082;background:white;font-family:inherit;outline:none;}
-/* Hide Google Translate top banner bar inside iframes */
-.skiptranslate{display:none !important;}
+/* Hide Google Translate top banner bar (not the dropdown widget) */
+body > .skiptranslate{display:none !important;}
 body{top:0 !important;}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
+<script>
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
+}
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 </head>
 <body>
 <div id="wrap">
@@ -3096,17 +3105,6 @@ function checkSavedDriveToken() {
     // Silently load from Drive in background
     driveLoad();
   }
-}
-
-// ═══════════════════════════════════════════════════════════════
-// GOOGLE TRANSLATE
-// ═══════════════════════════════════════════════════════════════
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
 }
 
 // ═══════════════════════════════════════════════════════════════
