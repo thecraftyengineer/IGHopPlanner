@@ -187,8 +187,17 @@ body{
 .bmc-btn{display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-weight:700;font-size:12px;padding:7px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);transition:opacity 0.15s;}
 .bmc-btn:hover{opacity:0.88;}
 .bmc-btn .bmc-icon{font-size:15px;}
+
+/* Google Translate widget */
+.translate-bar{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:6px;font-size:11px;color:#9d6bbf;}
+.translate-bar .goog-te-gadget{font-size:0 !important;font-family:inherit !important;}
+.translate-bar .goog-te-gadget .goog-te-combo{font-size:12px;padding:4px 6px;border:1.5px solid #e0d0f0;border-radius:8px;color:#4B0082;background:white;font-family:inherit;outline:none;}
+/* Hide Google Translate top banner bar inside iframes */
+.skiptranslate{display:none !important;}
+body{top:0 !important;}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async defer></script>
 </head>
 <body>
 <div id="wrap">
@@ -259,6 +268,11 @@ body{
         <button class="nav-btn" id="refresh-btn" onclick="refreshData()" title="Refresh schedule from sheet" style="font-size:14px;">&#8635;</button>
       </div>
     </div>
+  </div>
+
+  <div class="translate-bar">
+    <span>🌐 Translate:</span>
+    <div id="google_translate_element"></div>
   </div>
 
   <div id="storage-warning" style="display:none;background:#FEF3C7;border:1.5px solid #D97706;border-radius:12px;padding:9px 14px;margin-bottom:0.75rem;font-size:12px;color:#78350F;line-height:1.5;">
@@ -1706,7 +1720,7 @@ function renderHome() {
         <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">1</span><strong>All Hops</strong> — Tap the circle next to any hop you've joined for the month. Times convert to your timezone automatically.</div>
         <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">2</span><strong>My Schedule</strong> — See only your joined hops, sorted by date, with a task checklist for each occurrence.</div>
         <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">3</span><strong>Calendar</strong> — Month view with all hops. Yours are highlighted in purple.</div>
-        <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">4</span><strong>Hop Info</strong> — Descriptions, DM contacts, and task lists for every hop.</div>
+        <div style="margin-bottom:8px;"><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">4</span><strong>Hop Info</strong> — Descriptions, DM contacts, and graphics for every hop.</div>
         <div><span style="background:#f3e8ff;color:#4B0082;font-weight:700;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;margin-right:6px;">5</span><strong>Print</strong> — Printable version of your schedule or the full hop list.</div>
         <div style="margin-top:10px;padding:8px 10px;background:#faf5ff;border-radius:8px;border-left:3px solid #c9a7e8;font-size:11px;color:#666;">
           💾 Your selections are saved automatically in this browser. Connect Google Drive (from the All Hops tab) to sync across devices.
@@ -1802,6 +1816,7 @@ function renderHops() {
         <button class="join-info-btn" onclick="event.stopPropagation();toggleInfoExpand('${safeInfoKey}')">${infoExpanded[infoKey] ? 'Hide' : 'Info'}</button>
       </div>
       ${infoExpanded[infoKey] && HOP_INFO[name] ? `<div class="join-info-inline">
+        ${renderHopGraphic(name, true)}
         <div class="join-info-inline-desc">${HOP_INFO[name].desc}</div>
         ${buildDMLinks(HOP_INFO[name].dm, true)}
       </div>` : ''}`;
@@ -1907,7 +1922,17 @@ function renderCalendar() {
     cells += `<div class="vcal-cell ${isPast && !todayDay ? 'past-cell' : ''}">${numEl}${hopEls}</div>`;
   }
   const tzLabel = getTZLabel();
+  const myCount = ALL_HOPS.filter(n => joined[n]).length;
+  const exportBar = myCount > 0 ? `
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+    <button onclick="exportCalendar()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;background:#4B0082;color:white;border:none;font-size:12px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;">📅 Add My Hops to Calendar</button>
+    <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#666;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;">
+      <input type="checkbox" id="ics-all-months" style="width:14px;height:14px;accent-color:#4B0082;">
+      All future months
+    </label>
+  </div>` : '';
   return `<div class="cal-hint">All hops for the month — <strong style="color:#4B0082;">yours in purple</strong>. Past days dimmed. Times in <strong>${tzLabel}</strong>. Updates automatically when hops are added.</div>
+  ${exportBar}
   <div class="vcal-wrap">
     <div class="vcal-hdr">${DAY_SHORT.map(d => `<div class="vcal-dn">${d}</div>`).join('')}</div>
     <div class="vcal-cells">${cells}</div>
@@ -1926,7 +1951,7 @@ function renderHopGraphic(name, small) {
   const onerr = fallback
     ? `this.onerror=function(){this.style.display='none'};this.src='${fallback}'`
     : `this.style.display='none'`;
-  return `<img src="${url}" style="${style}" onerror="${onerr}" />`;
+  return `<img src="${url}" loading="lazy" style="${style}" onerror="${onerr}" />`;
 }
 
 function renderInfo() {
@@ -2280,21 +2305,21 @@ function printCalendarMySchedule() {
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, Arial, sans-serif; background: white; color: #222; }
-    .page { padding: 16px 18px 12px; }
+    .page { padding: 10px 14px 6px; }
 
     /* Header */
     .page-header {
       background: linear-gradient(135deg, #4B0082 0%, #9d2089 60%, #FF6B9D 100%);
       border-radius: 14px;
-      padding: 14px 18px 12px;
-      margin-bottom: 12px;
+      padding: 10px 16px 8px;
+      margin-bottom: 8px;
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
     }
     .header-left { flex: 1; }
-    .page-title { font-size: 20px; font-weight: 800; color: white; line-height: 1.15; letter-spacing: -0.3px; }
+    .page-title { font-size: 17px; font-weight: 800; color: white; line-height: 1.15; letter-spacing: -0.3px; }
     .page-subtitle { font-size: 10px; color: rgba(255,255,255,0.75); margin-top: 3px; }
     .month-badge {
       background: rgba(255,255,255,0.22);
@@ -2325,9 +2350,9 @@ function printCalendarMySchedule() {
     .cal-dow { background: linear-gradient(180deg,#4B0082,#6a0dad); color: white; font-size: 10px; font-weight: 700; padding: 6px 4px; text-align: center; border: 1px solid #6a0dad; letter-spacing: 0.04em; }
     .cal-cell {
       border: 1px solid #ede8f8;
-      padding: 5px 4px 4px;
+      padding: 4px 3px 3px;
       vertical-align: top;
-      height: 88px;
+      height: 72px;
       background: white;
     }
     .cal-cell.past { background: #fafafa; }
@@ -2337,12 +2362,12 @@ function printCalendarMySchedule() {
     .cal-cell.no-hops { background: #fdfdff; }
 
     /* Footer */
-    .page-footer { margin-top: 10px; font-size: 8px; color: #ccc; text-align: center; }
+    .page-footer { margin-top: 4px; font-size: 8px; color: #ccc; text-align: center; }
 
     @media print {
       body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .page { padding: 10px 12px 8px; }
-      @page { margin: 0.4in; size: landscape; }
+      .page { padding: 6px 8px 4px; }
+      @page { margin: 0.3in; size: landscape; }
     }
   </style></head><body>
   <div class="page">
@@ -2377,6 +2402,121 @@ function printCalendarMySchedule() {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// CALENDAR EXPORT (.ics)
+// ═══════════════════════════════════════════════════════════════
+function exportCalendar() {
+  const allMonths = document.getElementById('ics-all-months')?.checked ?? false;
+  const myHops = ALL_HOPS.filter(n => joined[n]);
+  if (myHops.length === 0) {
+    alert("You haven't joined any hops yet! Go to All Hops and tap the circle next to each hop you've joined.");
+    return;
+  }
+
+  // Collect hop dates across desired months
+  let allDates = [];
+  if (allMonths) {
+    // Current month through December of current year, plus all of next year
+    for (let m = vMonth + 1; m <= 12; m++) {
+      allDates.push(...getHopDates(vYear, m).map(h => ({ ...h, year: vYear, month: m })));
+    }
+    for (let m = 1; m <= 12; m++) {
+      allDates.push(...getHopDates(vYear + 1, m).map(h => ({ ...h, year: vYear + 1, month: m })));
+    }
+  } else {
+    allDates = getHopDates(vYear, vMonth + 1).map(h => ({ ...h, year: vYear, month: vMonth + 1 }));
+  }
+
+  // Filter to only joined hops
+  const myDates = allDates.filter(h => joined[h.name]);
+  if (myDates.length === 0) {
+    alert(`No joined hops found for ${allMonths ? 'upcoming months' : MONTH_NAMES[vMonth]}. Make sure you've selected hops in the All Hops tab.`);
+    return;
+  }
+
+  // Build .ics content
+  const now = new Date();
+  const stamp = now.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  let ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//CraftyEngineer//IG Hop Planner//EN',
+    'X-WR-CALNAME:IG Hops',
+    'X-WR-CALDESC:Card Making Instagram Hop Schedule from CraftyEngineer',
+    'CALSCALE:GREGORIAN',
+  ];
+
+  myDates.forEach((h, idx) => {
+    const mm = String(h.month).padStart(2, '0');
+    const dd = String(h.day).padStart(2, '0');
+    const dateStr = `${h.year}${mm}${dd}`;
+    const title = h.sub ? `${h.name} — ${h.sub}` : h.name;
+    const uid = `hop-${dateStr}-${idx}-${h.name.replace(/[^a-zA-Z0-9]/g, '')}@craftyengineer`;
+
+    // Description with DM info if available
+    const info = HOP_INFO[h.name];
+    let desc = '';
+    if (info) {
+      desc = (info.desc || '').replace(/\n/g, '\\n');
+      if (info.dm) desc += '\\n\\nDM: ' + info.dm;
+    }
+
+    ics.push('BEGIN:VEVENT');
+    ics.push(`UID:${uid}`);
+    ics.push(`DTSTAMP:${stamp}`);
+
+    if (h.et) {
+      // Convert ET time to user's selected timezone
+      let hour = h.et.h;
+      if (h.et.p === 'P' && hour !== 12) hour += 12;
+      if (h.et.p === 'A' && hour === 12) hour = 0;
+      const min = h.et.m || 0;
+      // Build a date in ET, then convert to user's TZ
+      const refDate = `${h.year}-${mm}-${dd}T${String(hour).padStart(2,'0')}:${String(min).padStart(2,'0')}:00`;
+      const tz = userTZ || 'America/New_York';
+      // Get UTC ms from ET interpretation
+      const etLocal = new Date(refDate);
+      const etOffset = new Date(etLocal.toLocaleString('en-US', {timeZone:'America/New_York'}));
+      const utcMs = etLocal.getTime() + (etLocal - etOffset);
+      // Get full local date/time in user's timezone (date may shift!)
+      const localDt = new Date(utcMs);
+      const localDateStr = localDt.toLocaleString('en-US', {timeZone: tz, year:'numeric', month:'2-digit', day:'2-digit', hour:'numeric', minute:'2-digit', hour12:false});
+      const [datePart, timePart] = localDateStr.split(', ');
+      const [lm, ld, ly] = datePart.split('/');
+      const [lhr, lmn] = timePart.split(':');
+      const localHour = parseInt(lhr) % 24;
+      const localMin = parseInt(lmn);
+      const localDateIcs = `${ly}${lm}${ld}`;
+      const timeStr = `${String(localHour).padStart(2, '0')}${String(localMin).padStart(2, '0')}00`;
+      ics.push(`DTSTART;TZID=${tz}:${localDateIcs}T${timeStr}`);
+      // 1 hour duration
+      ics.push('DURATION:PT1H');
+    } else {
+      // All-day event for "Anytime" hops
+      ics.push(`DTSTART;VALUE=DATE:${dateStr}`);
+      ics.push(`DTEND;VALUE=DATE:${dateStr}`);
+    }
+
+    ics.push(`SUMMARY:${title}`);
+    if (desc) ics.push(`DESCRIPTION:${desc}`);
+    ics.push('END:VEVENT');
+  });
+
+  ics.push('END:VCALENDAR');
+
+  // Download the file
+  const blob = new Blob([ics.join('\r\n')], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  const monthSlug = allMonths ? 'all' : MONTH_NAMES[vMonth].toLowerCase();
+  a.download = `ig-hops-${monthSlug}-${vYear}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════════
 // MAIN RENDER
 // ═══════════════════════════════════════════════════════════════
 function render() {
@@ -2402,14 +2542,16 @@ function render() {
 }
 
 // Tell Google Sites (or any parent iframe) how tall we are so it resizes
+let _notifyTimer = null;
 function notifyHeight() {
-  try {
-    const h = document.body.scrollHeight;
-    // Google Sites iframe resizer protocol
-    window.parent.postMessage({ type: 'resize', height: h }, '*');
-    // Also try the common iFrameResizer message format
-    window.parent.postMessage(JSON.stringify({ id: 'iFrameResizer', type: 'size', height: h }), '*');
-  } catch(e) {}
+  if (_notifyTimer) clearTimeout(_notifyTimer);
+  _notifyTimer = setTimeout(() => {
+    try {
+      const h = document.body.scrollHeight;
+      window.parent.postMessage({ type: 'resize', height: h }, '*');
+      window.parent.postMessage(JSON.stringify({ id: 'iFrameResizer', type: 'size', height: h }), '*');
+    } catch(e) {}
+  }, 150);
 }
 
 // Re-notify on images loading (graphics can expand the page height)
@@ -2954,6 +3096,17 @@ function checkSavedDriveToken() {
     // Silently load from Drive in background
     driveLoad();
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GOOGLE TRANSLATE
+// ═══════════════════════════════════════════════════════════════
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'en',
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay: false
+  }, 'google_translate_element');
 }
 
 // ═══════════════════════════════════════════════════════════════
