@@ -207,9 +207,9 @@ body{
     </div>
     <div class="tz-app-title">CraftyEngineer's<br>Card Making <span>IG Hop Planner</span></div>
     <div class="tz-tagline">
-      <a href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:500;">@craftyengineer</a>
+      <a target="_blank" href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:500;">@craftyengineer</a>
       &nbsp;·&nbsp;
-      <a href="https://instagram.com/cardmakingighophq" style="color:#9d6bbf;">@cardmakingIGHOPHQ</a>
+      <a target="_blank" href="https://instagram.com/cardmakingighophq" style="color:#9d6bbf;">@cardmakingIGHOPHQ</a>
     </div>
     <hr class="tz-divider">
     <div class="tz-subtitle-main">Instagram Hop Planner for Card Makers</div>
@@ -248,8 +248,8 @@ body{
       <div style="flex:1;">
         <div class="header-title">CraftyEngineer's Card Making IG Hop Planner</div>
         <div class="header-accounts">
-          <div class="header-acct">IG: <a href="https://instagram.com/craftyengineer">@craftyengineer</a></div>
-          <div class="header-acct">Hop List HQ IG: <a href="https://instagram.com/cardmakingighophq">@cardmakingIGHOPHQ</a></div>
+          <div class="header-acct">IG: <a target="_blank" href="https://instagram.com/craftyengineer">@craftyengineer</a></div>
+          <div class="header-acct">Hop List HQ IG: <a target="_blank" href="https://instagram.com/cardmakingighophq">@cardmakingIGHOPHQ</a></div>
         </div>
       </div>
       <div class="month-nav">
@@ -1341,7 +1341,7 @@ function isToday(day) {
 
 function parseDMs(s) {
   return s.split(/\s*(?:,|or|and)\s*/i).map(x => x.trim()).filter(x => x.startsWith('@'))
-    .map(x => { const h = x.replace(/^@/,''); return { handle:'@'+h, url:`https://instagram.com/${h}` }; });
+    .map(x => { const h = x.replace(/^@/,''); return { handle:'@'+h, url:`https://instagram.com/${h}`, target:'_blank' }; });
 }
 function buildDMLinks(s, small) {
   const d = parseDMs(s);
@@ -1673,9 +1673,9 @@ function renderHome() {
     <div style="text-align:center;padding:4px 0 10px;">
       <div style="font-size:20px;font-weight:800;color:#4B0082;letter-spacing:-0.5px;line-height:1.2;">CraftyEngineer's<br><span style="color:#9d6bbf;">Card Making IG Hop Planner</span></div>
       <div style="font-size:11px;color:#9d6bbf;margin-top:4px;">
-        <a href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:600;">@craftyengineer</a>
+        <a target="_blank" href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:600;">@craftyengineer</a>
         &nbsp;·&nbsp;
-        <a href="https://instagram.com/cardmakingighophq" style="color:#9d6bbf;">@cardmakingIGHOPHQ</a>
+        <a target="_blank" href="https://instagram.com/cardmakingighophq" style="color:#9d6bbf;">@cardmakingIGHOPHQ</a>
       </div>
     </div>
     <hr style="border:none;border-top:1px solid #e9d5ff;margin:0 0 14px;">
@@ -1683,7 +1683,7 @@ function renderHome() {
     <div style="font-size:12px;color:#444;line-height:1.7;margin-bottom:14px;padding:10px 12px;background:#faf5ff;border-radius:10px;border:1px solid #e9d5ff;">
       <p style="margin-bottom:8px;">Welcome to my Card Making Instagram Hop Planner! 🎨 I created this app to help you keep track of the hops you've joined and the tasks for each one. New to hops? Tap <strong style="color:#4B0082;">Hop Info</strong> to learn about all our wonderful crafty events.</p>
       <p style="margin-bottom:8px;">⚠️ Just a reminder — checking boxes and tapping buttons only tracks things here in the app. You still need to participate on Instagram in each hop's group chat!</p>
-      <p style="margin-bottom:8px;">If you need help, DM me <a href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:600;">@craftyengineer</a>.</p>
+      <p style="margin-bottom:8px;">If you need help, DM me <a target="_blank" href="https://instagram.com/craftyengineer" style="color:#4B0082;font-weight:600;">@craftyengineer</a>.</p>
       <p style="color:#7b2fbe;font-weight:500;">And if you find this useful, I'd love it if you <a href="https://buymeacoffee.com/craftyengineer" target="_blank" style="color:#7b2fbe;font-weight:700;text-decoration:underline;">bought me a coffee</a> ☕ — but absolutely no obligation!</p>
     </div>
 
