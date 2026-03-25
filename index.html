@@ -188,25 +188,11 @@ body{
 .bmc-btn:hover{opacity:0.88;}
 .bmc-btn .bmc-icon{font-size:15px;}
 
-/* Google Translate widget */
-.translate-bar{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:6px;font-size:11px;color:#9d6bbf;}
-.translate-bar .goog-te-gadget{font-size:0 !important;font-family:inherit !important;}
-.translate-bar .goog-te-gadget .goog-te-combo{font-size:12px;padding:4px 6px;border:1.5px solid #e0d0f0;border-radius:8px;color:#4B0082;background:white;font-family:inherit;outline:none;}
-/* Hide Google Translate top banner bar (not the dropdown widget) */
-body > .skiptranslate{display:none !important;}
-body{top:0 !important;}
+/* Translate dropdown */
+.translate-bar{display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:6px;}
+.translate-select{font-size:12px;padding:4px 8px;border:1.5px solid #e0d0f0;border-radius:8px;color:#4B0082;background:white;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234B0082'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;}
 </style>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script>
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'en',
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 </head>
 <body>
 <div id="wrap">
@@ -280,8 +266,27 @@ function googleTranslateElementInit() {
   </div>
 
   <div class="translate-bar">
-    <span>🌐 Translate:</span>
-    <div id="google_translate_element"></div>
+    <select class="translate-select" id="translate-select" onchange="translatePage(this.value)">
+      <option value="">🌐 Translate</option>
+      <option value="es">Español</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+      <option value="pt">Português</option>
+      <option value="it">Italiano</option>
+      <option value="nl">Nederlands</option>
+      <option value="ja">日本語</option>
+      <option value="ko">한국어</option>
+      <option value="zh-CN">中文</option>
+      <option value="ru">Русский</option>
+      <option value="ar">العربية</option>
+      <option value="hi">हिन्दी</option>
+      <option value="sv">Svenska</option>
+      <option value="da">Dansk</option>
+      <option value="no">Norsk</option>
+      <option value="fi">Suomi</option>
+      <option value="pl">Polski</option>
+      <option value="tl">Filipino</option>
+    </select>
   </div>
 
   <div id="storage-warning" style="display:none;background:#FEF3C7;border:1.5px solid #D97706;border-radius:12px;padding:9px 14px;margin-bottom:0.75rem;font-size:12px;color:#78350F;line-height:1.5;">
@@ -2548,6 +2553,8 @@ function render() {
   else html = renderPrint();
   document.getElementById('view').innerHTML = html;
   notifyHeight();
+  // Re-apply translation if active
+  if (_translateLang) setTimeout(translateDOM, 50);
 }
 
 // Tell Google Sites (or any parent iframe) how tall we are so it resizes
@@ -3105,6 +3112,151 @@ function checkSavedDriveToken() {
     // Silently load from Drive in background
     driveLoad();
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRANSLATE — in-place DOM translation using free Google Translate API
+// ═══════════════════════════════════════════════════════════════
+let _translateLang = '';       // current translation language ('' = English/off)
+let _translateCache = {};      // { 'en→es': { 'Hello': 'Hola', ... } }
+let _translateBusy = false;
+
+function translatePage(lang) {
+  _translateLang = lang;
+  if (!lang) {
+    // Revert to English — just re-render
+    render();
+    return;
+  }
+  // Translate the current page
+  translateDOM();
+}
+
+// Translate a single string via Google Translate free endpoint
+async function translateText(text, lang) {
+  const cacheKey = `en→${lang}`;
+  if (!_translateCache[cacheKey]) _translateCache[cacheKey] = {};
+  if (_translateCache[cacheKey][text]) return _translateCache[cacheKey][text];
+
+  try {
+    const resp = await fetch(
+      `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${lang}&dt=t&q=${encodeURIComponent(text)}`
+    );
+    const data = await resp.json();
+    // data[0] is array of [translatedSegment, originalSegment, ...]
+    const translated = data[0].map(seg => seg[0]).join('');
+    _translateCache[cacheKey][text] = translated;
+    return translated;
+  } catch(e) {
+    console.log('Translate error:', e);
+    return text; // fallback to original
+  }
+}
+
+// Batch translate an array of unique strings
+async function translateBatch(texts, lang) {
+  const cacheKey = `en→${lang}`;
+  if (!_translateCache[cacheKey]) _translateCache[cacheKey] = {};
+
+  // Filter to only uncached strings
+  const needed = texts.filter(t => !_translateCache[cacheKey][t] && t.trim().length > 0);
+  if (needed.length === 0) return;
+
+  // Google Translate can handle ~5000 chars per request
+  // Batch using newline separator
+  const batches = [];
+  let current = [];
+  let currentLen = 0;
+  for (const t of needed) {
+    if (currentLen + t.length > 4000 && current.length > 0) {
+      batches.push(current);
+      current = [];
+      currentLen = 0;
+    }
+    current.push(t);
+    currentLen += t.length + 1;
+  }
+  if (current.length > 0) batches.push(current);
+
+  for (const batch of batches) {
+    try {
+      const joined = batch.join('\n');
+      const resp = await fetch(
+        `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${lang}&dt=t&q=${encodeURIComponent(joined)}`
+      );
+      const data = await resp.json();
+      // Reassemble translated text and split by newlines
+      const fullTranslated = data[0].map(seg => seg[0]).join('');
+      const parts = fullTranslated.split('\n');
+      batch.forEach((orig, i) => {
+        _translateCache[cacheKey][orig] = (parts[i] || orig).trim();
+      });
+    } catch(e) {
+      console.log('Translate batch error:', e);
+      // Cache originals as fallback
+      batch.forEach(t => { _translateCache[cacheKey][t] = t; });
+    }
+  }
+}
+
+// Collect translatable text nodes from the DOM
+function getTextNodes(root) {
+  const nodes = [];
+  const skip = new Set(['SCRIPT','STYLE','TEXTAREA','SELECT','OPTION','INPUT','SVG','IMG']);
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode: function(node) {
+      if (skip.has(node.parentElement?.tagName)) return NodeFilter.FILTER_REJECT;
+      // Skip the translate dropdown itself
+      if (node.parentElement?.closest('.translate-bar')) return NodeFilter.FILTER_REJECT;
+      // Skip timezone selects
+      if (node.parentElement?.closest('#tz-select, #tz-select-home')) return NodeFilter.FILTER_REJECT;
+      const text = node.textContent.trim();
+      if (!text || text.length < 2) return NodeFilter.FILTER_REJECT;
+      // Skip if purely numeric, time, or emoji
+      if (/^[\d\/:.%\s·—–\-✓✗☁️⭐📅🖨️📖⚠️💾☕♥️🌐🎨]+$/.test(text)) return NodeFilter.FILTER_REJECT;
+      return NodeFilter.FILTER_ACCEPT;
+    }
+  });
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  return nodes;
+}
+
+// Main translate function — collects text, batches, applies
+async function translateDOM() {
+  const lang = _translateLang;
+  if (!lang || _translateBusy) return;
+  _translateBusy = true;
+
+  try {
+    const cacheKey = `en→${lang}`;
+    if (!_translateCache[cacheKey]) _translateCache[cacheKey] = {};
+    const cache = _translateCache[cacheKey];
+
+    // Collect text nodes from the main view, summary bar, and header
+    const nodes = [
+      ...getTextNodes(document.getElementById('view') || document.body),
+      ...getTextNodes(document.getElementById('summary-bar') || document.createElement('div')),
+    ];
+
+    // Get unique texts
+    const unique = [...new Set(nodes.map(n => n.textContent.trim()).filter(t => t.length >= 2))];
+
+    // Batch translate uncached strings
+    await translateBatch(unique, lang);
+
+    // Apply translations — check language hasn't changed during async work
+    if (_translateLang !== lang) { _translateBusy = false; return; }
+
+    nodes.forEach(node => {
+      const orig = node.textContent.trim();
+      if (cache[orig]) {
+        node.textContent = node.textContent.replace(orig, cache[orig]);
+      }
+    });
+  } catch(e) {
+    console.log('translateDOM error:', e);
+  }
+  _translateBusy = false;
 }
 
 // ═══════════════════════════════════════════════════════════════
