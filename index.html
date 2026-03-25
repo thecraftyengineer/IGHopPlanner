@@ -1232,6 +1232,28 @@ const TZ_LABELS = {
   "Asia/Tokyo":"JST","Australia/Sydney":"AEST","Pacific/Auckland":"NZST"
 };
 
+// Dynamic timezone abbreviation — uses the browser's actual current DST state
+// Falls back to TZ_LABELS if the browser returns a long name
+function getDynamicTZLabel(tz) {
+  if (!tz) return 'Local';
+  try {
+    // timeZoneName:'short' returns abbreviations like "EDT", "AEDT", "BST", etc.
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      timeZoneName: 'short'
+    }).formatToParts(new Date());
+    const tzPart = parts.find(p => p.type === 'timeZoneName');
+    if (tzPart && tzPart.value) {
+      // Intl returns things like "GMT+11" for some zones — use static fallback for those
+      if (tzPart.value.startsWith('GMT+') || tzPart.value.startsWith('GMT-') || tzPart.value.startsWith('UTC')) {
+        return TZ_LABELS[tz] || tzPart.value;
+      }
+      return tzPart.value;
+    }
+  } catch(e) {}
+  return TZ_LABELS[tz] || 'Local';
+}
+
 // Legacy numeric → IANA migration map
 const TZ_MIGRATE = {
   "-5":"America/New_York","-6":"America/Chicago","-7":"America/Denver",
@@ -1258,12 +1280,12 @@ function convertTimeIANA(et) {
   // Get local time string in user's timezone
   const tz = userTZ || 'America/New_York';
   const localStr = new Date(utcMs).toLocaleString('en-US', {timeZone: tz, hour:'numeric', minute:'2-digit', hour12:true});
-  const label = TZ_LABELS[tz] || 'Local';
+  const label = getDynamicTZLabel(tz);
   return localStr.replace(':00','').replace(' AM',' A').replace(' PM',' P') + ' ' + label;
 }
 
 function getTZLabel() {
-  return TZ_LABELS[userTZ] || 'Local';
+  return getDynamicTZLabel(userTZ);
 }
 const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
@@ -3302,33 +3324,4 @@ async function translateDOM() {
 // ═══════════════════════════════════════════════════════════════
 (function init() {
   const hasSavedState = loadState();
-  // Pre-select the right timezone in the dropdown (IANA string match)
-  const sel = document.getElementById('tz-select');
-  if (sel) {
-    for (let i = 0; i < sel.options.length; i++) {
-      if (sel.options[i].value === userTZ) {
-        sel.selectedIndex = i;
-        break;
-      }
-    }
-  }
-  if (!HAS_STORAGE) {
-    setTimeout(() => {
-      const w = document.getElementById('storage-warning');
-      if (w) w.style.display = 'block';
-    }, 500);
-  }
-  // Check for saved Drive token
-  checkSavedDriveToken();
-  // Always show app (Home tab is now the first tab)
-  document.getElementById('tz-screen').style.display = 'none';
-  document.getElementById('app').style.display = 'block';
-  // New users land on Home tab; returning users go straight to All Hops
-  activeTab = hasSavedState ? 'hops' : 'home';
-  render();
-  loadHopMaster();
-  loadEvents(vYear, vMonth + 1);
-})();
-</script>
-</body>
-</html>
+  // Pre-select the right timezone in the dro
