@@ -142,9 +142,10 @@ body{
 /* HOP INFO TAB */
 .info-intro{font-size:12px;color:#9d6bbf;margin-bottom:10px;line-height:1.5;}
 .info-card{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:14px;margin-bottom:8px;overflow:hidden;}
-.info-card-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
+.info-card-top{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .info-hop-name{font-size:13px;font-weight:500;color:#2d0050;}
-.info-contact-line{font-size:11px;color:#9d6bbf;margin-top:2px;overflow-wrap:break-word;word-break:break-word;}
+.info-contact-line{font-size:11px;color:#9d6bbf;margin-top:2px;word-break:break-all;overflow-wrap:anywhere;}
+.info-contact-line a{word-break:break-all;}
 .info-arrow{font-size:11px;color:#9d6bbf;transition:transform 0.2s;flex-shrink:0;}
 .info-arrow.open{transform:rotate(90deg);}
 .info-body{padding:10px 14px 14px;border-top:1px solid #f0e8f8;background:rgba(253,248,255,0.96);}
@@ -1460,7 +1461,7 @@ function isToday(day) {
 }
 
 function parseDMs(s) {
-  return s.split(/\s*(?:,|or|and)\s*/i).map(x => x.trim()).filter(x => x.startsWith('@'))
+  return s.split(/\s*(?:,|\bor\b|\band\b)\s*/i).map(x => x.trim()).filter(x => x.startsWith('@'))
     .map(x => { const h = x.replace(/^@/,''); return { handle:'@'+h, url:`https://instagram.com/${h}`, target:'_blank' }; });
 }
 function buildDMLinks(s, small) {
