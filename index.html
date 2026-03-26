@@ -227,6 +227,7 @@ body{
     <div class="tz-label">Your time zone</div>
     <select class="tz-select" id="tz-select">
       <option value="America/New_York">Eastern Time (EST/EDT)</option>
+      <option value="America/Halifax">Atlantic Time (AST/ADT)</option>
       <option value="America/Chicago">Central Time (CST/CDT)</option>
       <option value="America/Denver">Mountain Time (MST/MDT)</option>
       <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
@@ -1229,7 +1230,7 @@ function getHopDates(year, month) {
 // ═══════════════════════════════════════════════════════════════
 // IANA timezone → short label map
 const TZ_LABELS = {
-  "America/New_York":"EST/EDT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
+  "America/New_York":"EST/EDT","America/Halifax":"AST/ADT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
   "America/Los_Angeles":"PST/PDT","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
   "Europe/London":"GMT/BST","Europe/Paris":"CET/CEST","Europe/Helsinki":"EET/EEST",
   "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
@@ -1239,6 +1240,7 @@ const TZ_LABELS = {
 // DST-aware abbreviation pairs: { timezone: { standardOffset: 'STD', dstOffset: 'DST' } }
 const TZ_DST_LABELS = {
   "America/New_York":     { "-5":"EST", "-4":"EDT" },
+  "America/Halifax":      { "-4":"AST", "-3":"ADT" },
   "America/Chicago":      { "-6":"CST", "-5":"CDT" },
   "America/Denver":       { "-7":"MST", "-6":"MDT" },
   "America/Los_Angeles":  { "-8":"PST", "-7":"PDT" },
@@ -1779,6 +1781,7 @@ function renderHome() {
   // Build TZ options HTML with current userTZ selected
   const tzOptions = [
     ["America/New_York","Eastern Time (EST/EDT)"],
+    ["America/Halifax","Atlantic Time (AST/ADT)"],
     ["America/Chicago","Central Time (CST/CDT)"],
     ["America/Denver","Mountain Time (MST/MDT)"],
     ["America/Los_Angeles","Pacific Time (PST/PDT)"],
