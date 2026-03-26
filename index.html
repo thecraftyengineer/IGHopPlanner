@@ -1700,6 +1700,18 @@ function buildHopCard(h, isPast) {
   const rcState = taskIndices.includes(0) ? getRollCall(ok) : null;
   const rcIdx = taskIndices.includes(0) ? regOk(ok) : null;
 
+  // Roll call badge — same format as Coming Up card
+  let rcBadge = '';
+  if (taskIndices.includes(0)) {
+    if (rcState === 'yes') {
+      rcBadge = `<span style="font-size:10px;color:#059669;font-weight:600;margin-left:5px;">· committed</span>`;
+    } else if (rcState === 'no') {
+      rcBadge = `<span style="font-size:10px;color:#DC2626;font-weight:500;margin-left:5px;">· declined</span>`;
+    } else {
+      rcBadge = `<span style="font-size:10px;color:#9d6bbf;font-weight:400;margin-left:5px;">· response not given</span>`;
+    }
+  }
+
   // Progress: roll call counts only if 'yes'; other tasks count if truthy
   const doneCount = taskIndices.filter(i => {
     if (i === 0) return rcState === 'yes';
@@ -1743,7 +1755,7 @@ function buildHopCard(h, isPast) {
   return `<div class="hop-card ${isPast ? 'past-card' : ''}">
     <div class="hop-card-top" onclick="toggleExpand('${safeOk}')">
       <div style="flex:1;min-width:0;">
-        <div class="hop-card-name">${h.name}</div>
+        <div class="hop-card-name">${h.name}${rcBadge}</div>
         ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : ''}
       </div>
       <div class="hop-card-meta">
@@ -2899,9 +2911,16 @@ async function loadEvents(year, month) {
       const row = rows[i];
       const dateStr = (row[dateCol] || '').trim();
       if (!dateStr) continue;
-      const parts = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-      if (!parts) continue;
-      const eYear = parseInt(parts[1]), eMonth = parseInt(parts[2]), eDay = parseInt(parts[3]);
+      // Handle multiple date formats from Google Sheets CSV:
+      //   YYYY-MM-DD  (ISO),  M/D/YYYY or MM/DD/YYYY  (US locale)
+      let eYear, eMonth, eDay;
+      const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      const usMatch  = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (isoMatch) {
+        eYear = parseInt(isoMatch[1]); eMonth = parseInt(isoMatch[2]); eDay = parseInt(isoMatch[3]);
+      } else if (usMatch) {
+        eMonth = parseInt(usMatch[1]); eDay = parseInt(usMatch[2]); eYear = parseInt(usMatch[3]);
+      } else { continue; }
       if (eYear !== year || eMonth !== month) continue;
 
       const active = activeCol >= 0 ? (row[activeCol] || '').trim().toUpperCase() !== 'NO' : true;
@@ -3378,11 +3397,12 @@ async function translateDOM() {
   // Always show app (Home tab is now the first tab)
   document.getElementById('tz-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  // New users land on Home tab; returning users go straight to All Hops
-  activeTab = hasSavedState ? 'hops' : 'home';
+  // New users land on Home tab; returning users go straight to My Schedule
+  activeTab = hasSavedState ? 'schedule' : 'home';
   render();
-  loadHopMaster();
-  loadEvents(vYear, vMonth + 1);
+  // Must await loadHopMaster so ALL_HOPS is populated before loadEvents
+  // tries to match event names against it
+  loadHopMaster().then(() => loadEvents(vYear, vMonth + 1));
 })();
 </script>
 </body>
