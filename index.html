@@ -1228,11 +1228,11 @@ function getHopDates(year, month) {
 // ═══════════════════════════════════════════════════════════════
 // IANA timezone → short label map
 const TZ_LABELS = {
-  "America/New_York":"ET","America/Chicago":"CT","America/Denver":"MT",
-  "America/Los_Angeles":"PT","America/Anchorage":"AKT","Pacific/Honolulu":"HST",
-  "Europe/London":"GMT/BST","Europe/Paris":"CET","Europe/Helsinki":"EET",
+  "America/New_York":"EST/EDT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
+  "America/Los_Angeles":"PST/PDT","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
+  "Europe/London":"GMT/BST","Europe/Paris":"CET/CEST","Europe/Helsinki":"EET/EEST",
   "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
-  "Asia/Tokyo":"JST","Australia/Sydney":"AEST","Pacific/Auckland":"NZST"
+  "Asia/Tokyo":"JST","Australia/Sydney":"AEST/AEDT","Pacific/Auckland":"NZST/NZDT"
 };
 
 // DST-aware abbreviation pairs: { timezone: { standardOffset: 'STD', dstOffset: 'DST' } }
