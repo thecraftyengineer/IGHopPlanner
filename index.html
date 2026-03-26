@@ -144,7 +144,7 @@ body{
 .info-card{background:rgba(255,255,255,0.92);border:1.5px solid #e0d0f0;border-radius:14px;margin-bottom:8px;overflow:hidden;}
 .info-card-top{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;}
 .info-hop-name{font-size:13px;font-weight:500;color:#2d0050;}
-.info-contact-line{font-size:11px;color:#9d6bbf;margin-top:2px;}
+.info-contact-line{font-size:11px;color:#9d6bbf;margin-top:2px;overflow-wrap:break-word;word-break:break-word;}
 .info-arrow{font-size:11px;color:#9d6bbf;transition:transform 0.2s;flex-shrink:0;}
 .info-arrow.open{transform:rotate(90deg);}
 .info-body{padding:10px 14px 14px;border-top:1px solid #f0e8f8;background:rgba(253,248,255,0.96);}
@@ -2070,7 +2070,7 @@ function renderInfo() {
     const dms = info ? parseDMs(info.dm) : [];
     return `<div class="info-card">
       <div class="info-card-top" onclick="toggleInfoExpand('${safeKey}')">
-        <div style="flex:1;">
+        <div style="flex:1;min-width:0;">
           <div class="info-hop-name">${name}</div>
           ${dms.length ? `<div class="info-contact-line">DM: ${dms.map(d => `<a href="${d.url}" target="_blank" style="color:#4B0082;text-decoration:none;">${d.handle}</a>`).join(' or ')}</div>` : ''}
         </div>
