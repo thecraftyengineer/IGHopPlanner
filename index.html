@@ -225,11 +225,11 @@ body{
     <div class="tz-body-text">All hop times are listed in Eastern Time (ET). Select your time zone once and everything converts automatically throughout the app.</div>
     <div class="tz-label">Your time zone</div>
     <select class="tz-select" id="tz-select">
-      <option value="America/New_York">Eastern Time (ET)</option>
-      <option value="America/Chicago">Central Time (CT)</option>
-      <option value="America/Denver">Mountain Time (MT)</option>
-      <option value="America/Los_Angeles">Pacific Time (PT)</option>
-      <option value="America/Anchorage">Alaska (AKT)</option>
+      <option value="America/New_York">Eastern Time (EST/EDT)</option>
+      <option value="America/Chicago">Central Time (CST/CDT)</option>
+      <option value="America/Denver">Mountain Time (MST/MDT)</option>
+      <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
+      <option value="America/Anchorage">Alaska (AKST/AKDT)</option>
       <option value="Pacific/Honolulu">Hawaii (HST)</option>
       <option value="Europe/London">United Kingdom (GMT/BST)</option>
       <option value="Europe/Paris">Central Europe (CET/CEST)</option>
@@ -238,8 +238,8 @@ body{
       <option value="Asia/Kolkata">India (IST)</option>
       <option value="Asia/Shanghai">China / Singapore (CST)</option>
       <option value="Asia/Tokyo">Japan / Korea (JST)</option>
-      <option value="Australia/Sydney">Eastern Australia (AEST)</option>
-      <option value="Pacific/Auckland">New Zealand (NZST)</option>
+      <option value="Australia/Sydney">Eastern Australia (AEST/AEDT)</option>
+      <option value="Pacific/Auckland">New Zealand (NZST/NZDT)</option>
     </select>
     <button class="tz-btn" onclick="saveTZ()">Let's go!</button>
     <div class="tz-note">You can change this any time from the All Hops tab.</div>
@@ -1235,8 +1235,26 @@ const TZ_LABELS = {
   "Asia/Tokyo":"JST","Australia/Sydney":"AEST","Pacific/Auckland":"NZST"
 };
 
+// DST-aware abbreviation pairs: { timezone: { standardOffset: 'STD', dstOffset: 'DST' } }
+const TZ_DST_LABELS = {
+  "America/New_York":     { "-5":"EST", "-4":"EDT" },
+  "America/Chicago":      { "-6":"CST", "-5":"CDT" },
+  "America/Denver":       { "-7":"MST", "-6":"MDT" },
+  "America/Los_Angeles":  { "-8":"PST", "-7":"PDT" },
+  "America/Anchorage":    { "-9":"AKST","-8":"AKDT" },
+  "Pacific/Honolulu":     { "-10":"HST" },
+  "Europe/London":        { "0":"GMT",  "1":"BST" },
+  "Europe/Paris":         { "1":"CET",  "2":"CEST" },
+  "Europe/Helsinki":      { "2":"EET",  "3":"EEST" },
+  "Europe/Moscow":        { "3":"MSK" },
+  "Asia/Kolkata":         { "5.5":"IST" },
+  "Asia/Shanghai":        { "8":"CST" },
+  "Asia/Tokyo":           { "9":"JST" },
+  "Australia/Sydney":     { "10":"AEST","11":"AEDT" },
+  "Pacific/Auckland":     { "12":"NZST","13":"NZDT" },
+};
+
 // Dynamic timezone abbreviation — uses the browser's actual current DST state
-// Falls back to TZ_LABELS if the browser returns a long name
 function getDynamicTZLabel(tz) {
   if (!tz) return 'Local';
   try {
@@ -1247,8 +1265,19 @@ function getDynamicTZLabel(tz) {
     }).formatToParts(new Date());
     const tzPart = parts.find(p => p.type === 'timeZoneName');
     if (tzPart && tzPart.value) {
-      // Intl returns things like "GMT+11" for some zones — use static fallback for those
-      if (tzPart.value.startsWith('GMT+') || tzPart.value.startsWith('GMT-') || tzPart.value.startsWith('UTC')) {
+      // Some browsers return "GMT+11" instead of "AEDT" — detect and use our DST map
+      if (tzPart.value.startsWith('GMT+') || tzPart.value.startsWith('GMT-') || tzPart.value === 'GMT' || tzPart.value.startsWith('UTC')) {
+        // Calculate current offset for this timezone
+        const dstMap = TZ_DST_LABELS[tz];
+        if (dstMap) {
+          const now = new Date();
+          const utcStr = now.toLocaleString('en-US', { timeZone: 'UTC' });
+          const tzStr = now.toLocaleString('en-US', { timeZone: tz });
+          const diffMs = new Date(tzStr) - new Date(utcStr);
+          const diffHrs = diffMs / (1000 * 60 * 60);
+          const offsetKey = String(diffHrs);
+          if (dstMap[offsetKey]) return dstMap[offsetKey];
+        }
         return TZ_LABELS[tz] || tzPart.value;
       }
       return tzPart.value;
@@ -1736,11 +1765,11 @@ function toggleHopSort() {
 function renderHome() {
   // Build TZ options HTML with current userTZ selected
   const tzOptions = [
-    ["America/New_York","Eastern Time (ET)"],
-    ["America/Chicago","Central Time (CT)"],
-    ["America/Denver","Mountain Time (MT)"],
-    ["America/Los_Angeles","Pacific Time (PT)"],
-    ["America/Anchorage","Alaska (AKT)"],
+    ["America/New_York","Eastern Time (EST/EDT)"],
+    ["America/Chicago","Central Time (CST/CDT)"],
+    ["America/Denver","Mountain Time (MST/MDT)"],
+    ["America/Los_Angeles","Pacific Time (PST/PDT)"],
+    ["America/Anchorage","Alaska (AKST/AKDT)"],
     ["Pacific/Honolulu","Hawaii (HST)"],
     ["Europe/London","United Kingdom (GMT/BST)"],
     ["Europe/Paris","Central Europe (CET/CEST)"],
@@ -1749,8 +1778,8 @@ function renderHome() {
     ["Asia/Kolkata","India (IST)"],
     ["Asia/Shanghai","China / Singapore (CST)"],
     ["Asia/Tokyo","Japan / Korea (JST)"],
-    ["Australia/Sydney","Eastern Australia (AEST)"],
-    ["Pacific/Auckland","New Zealand (NZST)"]
+    ["Australia/Sydney","Eastern Australia (AEST/AEDT)"],
+    ["Pacific/Auckland","New Zealand (NZST/NZDT)"]
   ].map(([val,label]) =>
     `<option value="${val}"${userTZ === val ? ' selected' : ''}>${label}</option>`
   ).join('');
