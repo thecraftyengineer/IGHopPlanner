@@ -3407,4 +3407,16 @@ async function translateDOM() {
   }
   // Check for saved Drive token
   checkSavedDriveToken();
-  // Always show a
+  // Always show app (Home tab is now the first tab)
+  document.getElementById('tz-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  // New users land on Home tab; returning users go straight to My Schedule
+  activeTab = hasSavedState ? 'schedule' : 'home';
+  render();
+  // Must await loadHopMaster so ALL_HOPS is populated before loadEvents
+  // tries to match event names against it
+  loadHopMaster().then(() => loadEvents(vYear, vMonth + 1));
+})();
+</script>
+</body>
+</html>
