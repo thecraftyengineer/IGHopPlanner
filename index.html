@@ -1592,52 +1592,84 @@ function renderNextUp() {
   const realDay = _now.getDate();
   const todayMs = new Date(realYear, realMonth, realDay, 12, 0, 0).getTime();
   const cutoffMs = new Date(realYear, realMonth, realDay + COMING_UP_DAYS, 12, 0, 0).getTime();
+
+  // Fetch current month's hops
   const currentMonthDates = getHopDates(realYear, realMonth + 1).filter(h => joined[h.name]);
-  if (!currentMonthDates.length) return '';
-  const byDay = {};
+
+  // Check if the window crosses into next month — if so, fetch next month too
+  const daysInMonth = new Date(realYear, realMonth + 1, 0).getDate();
+  let nextMonthDates = [];
+  if (realDay + COMING_UP_DAYS > daysInMonth) {
+    const nMonth = realMonth === 11 ? 0 : realMonth + 1;
+    const nYear  = realMonth === 11 ? realYear + 1 : realYear;
+    nextMonthDates = getHopDates(nYear, nMonth + 1).filter(h => joined[h.name]);
+  }
+
+  if (!currentMonthDates.length && !nextMonthDates.length) return '';
+
+  // Build combined byDay map — current month uses day numbers as-is,
+  // next month entries are tagged with their actual date for display
+  const byDay = {};          // day number → hops (current month)
+  const byDayNext = {};      // day number → hops (next month)
   currentMonthDates.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
+  nextMonthDates.forEach(h => { if (!byDayNext[h.day]) byDayNext[h.day] = []; byDayNext[h.day].push(h); });
 
-  // Get days within the next COMING_UP_DAYS window
-  const allFutureDays = Object.keys(byDay).map(Number).sort((a,b) => a-b)
-    .filter(d => {
-      const dayDate = new Date(realYear, realMonth, d, 12, 0, 0);
-      const diff = Math.round((dayDate - todayMs) / (1000*60*60*24));
-      return diff >= 0 && diff < COMING_UP_DAYS;
-    });
-  if (!allFutureDays.length) return '';
+  // Get days within the next COMING_UP_DAYS window — from both months
+  // Build unified entries: [{ year, month, day, hops }]
+  const nMonth = realMonth === 11 ? 0 : realMonth + 1;
+  const nYear  = realMonth === 11 ? realYear + 1 : realYear;
+  const entries = [];
 
-  const mn = MONTH_NAMES[realMonth];
+  Object.keys(byDay).map(Number).forEach(d => {
+    const dayDate = new Date(realYear, realMonth, d, 12, 0, 0);
+    const diff = Math.round((dayDate - todayMs) / (1000*60*60*24));
+    if (diff >= 0 && diff < COMING_UP_DAYS) {
+      entries.push({ year: realYear, month: realMonth, day: d, hops: byDay[d] });
+    }
+  });
+  Object.keys(byDayNext).map(Number).forEach(d => {
+    const dayDate = new Date(nYear, nMonth, d, 12, 0, 0);
+    const diff = Math.round((dayDate - todayMs) / (1000*60*60*24));
+    if (diff >= 0 && diff < COMING_UP_DAYS) {
+      entries.push({ year: nYear, month: nMonth, day: d, hops: byDayNext[d] });
+    }
+  });
+
+  // Sort by actual date
+  entries.sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day));
+
+  if (!entries.length) return '';
 
   // Helper: convert an ET time object to a real Date in user's local time
   // Returns null if the hop has no specific time (anytime hops)
-  function hopEndTime(h, day) {
+  function hopEndTime(h, eYear, eMonth, day) {
     if (!h.et) return null; // "Anytime" — never expires
     let hour = h.et.h;
     if (h.et.p === 'P' && hour !== 12) hour += 12;
     if (h.et.p === 'A' && hour === 12) hour = 0;
     const mins = h.et.m || 0;
-    // Build an ET datetime string and get the UTC equivalent
-    const etStr = `${realYear}-${String(realMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(mins).padStart(2,'0')}:00`;
-    // Convert ET → UTC using the browser's Intl offset for America/New_York
-    const etDate = new Date(etStr); // parsed as local time — we adjust below
+    const etStr = `${eYear}-${String(eMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(mins).padStart(2,'0')}:00`;
+    const etDate = new Date(etStr);
     const etOffset = new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'}));
     const utcMs = etDate.getTime() - (etOffset.getTime() - etDate.getTime());
     return new Date(utcMs);
   }
 
-  const sections = allFutureDays.map(day => {
-    const wd = DAY_NAMES[new Date(realYear, realMonth, day).getDay()];
-    const isToday = day === realDay;
+  const sections = entries.map(entry => {
+    const { year: eYear, month: eMonth, day, hops: dayHops } = entry;
+    const mn = MONTH_NAMES[eMonth];
+    const wd = DAY_NAMES[new Date(eYear, eMonth, day).getDay()];
+    const isToday = eYear === realYear && eMonth === realMonth && day === realDay;
 
     // Filter out hops whose time has already passed today
-    const hops = byDay[day].filter(h => {
-      if (!isToday) return true; // future days — always show
-      const endTime = hopEndTime(h, day);
-      if (!endTime) return true; // "Anytime" hops — keep all day
-      return endTime > _now;    // only show if hasn't started/passed yet
+    const hops = dayHops.filter(h => {
+      if (!isToday) return true;
+      const endTime = hopEndTime(h, eYear, eMonth, day);
+      if (!endTime) return true;
+      return endTime > _now;
     });
 
-    if (!hops.length) return ''; // all hops on this day already passed
+    if (!hops.length) return '';
 
     const hopItems = hops.map(h => {
       const t = convertTime(h.et);
@@ -1645,10 +1677,7 @@ function renderNextUp() {
       const taskIndices = getTasksForHop(h.name);
       let rcBadge = '';
       if (taskIndices.includes(0)) {
-        // Use real year/month for okey since Coming Up always shows real current month
-        const rcOk = `${realYear}-${realMonth}|${h.name}${h.sub ? '::' + h.sub : ''}###0`;
-        // We need okey scoped to real month — build it manually
-        const rcKey = `${realYear}-${realMonth}-${h.day}|${h.name}${h.sub ? '::' + h.sub : ''}`;
+        const rcKey = `${eYear}-${eMonth}-${h.day}|${h.name}${h.sub ? '::' + h.sub : ''}`;
         const rcVal = tasksDone[rcKey + '###0'];
         const rcState = (rcVal === 'yes' || rcVal === true) ? 'yes' : rcVal === 'no' ? 'no' : null;
         if (rcState === 'yes') {
@@ -1670,10 +1699,10 @@ function renderNextUp() {
 
   if (!sections) return ''; // everything has passed
 
-  const visibleDayCount = allFutureDays.filter(day => {
-    if (day !== realDay) return true;
-    return byDay[day].some(h => {
-      const endTime = hopEndTime(h, day);
+  const visibleDayCount = entries.filter(entry => {
+    if (!(entry.year === realYear && entry.month === realMonth && entry.day === realDay)) return true;
+    return entry.hops.some(h => {
+      const endTime = hopEndTime(h, entry.year, entry.month, entry.day);
       return !endTime || endTime > _now;
     });
   }).length;
