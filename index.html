@@ -2741,10 +2741,13 @@ function parseScheduleRule(raw) {
     let anchor;
     const isoA = anchorRaw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     const usA  = anchorRaw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    const dotA = anchorRaw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
     if (isoA) {
       anchor = new Date(parseInt(isoA[1]), parseInt(isoA[2]) - 1, parseInt(isoA[3]), 12, 0, 0);
     } else if (usA) {
       anchor = new Date(parseInt(usA[3]), parseInt(usA[1]) - 1, parseInt(usA[2]), 12, 0, 0);
+    } else if (dotA) {
+      anchor = new Date(parseInt(dotA[3]), parseInt(dotA[1]) - 1, parseInt(dotA[2]), 12, 0, 0);
     } else {
       anchor = new Date(anchorRaw + 'T12:00:00');
     }
@@ -2842,13 +2845,15 @@ function computeDatesForRule(rule, year, month) {
   return dates;
 }
 
-// Parse a date string in ISO (YYYY-MM-DD) or US (M/D/YYYY) format → Date object or null
+// Parse a date string in ISO (YYYY-MM-DD) or US (M/D/YYYY or M.D.YYYY) format → Date object or null
 function parseFlexDate(str) {
   if (!str) return null;
   const iso = str.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
   if (iso) return new Date(parseInt(iso[1]), parseInt(iso[2]) - 1, parseInt(iso[3]), 12, 0, 0);
   const us = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (us) return new Date(parseInt(us[3]), parseInt(us[1]) - 1, parseInt(us[2]), 12, 0, 0);
+  const dot = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+  if (dot) return new Date(parseInt(dot[3]), parseInt(dot[1]) - 1, parseInt(dot[2]), 12, 0, 0);
   return null;
 }
 
@@ -2993,14 +2998,17 @@ async function loadEvents(year, month) {
       const dateStr = (row[dateCol] || '').trim();
       if (!dateStr) continue;
       // Handle multiple date formats from Google Sheets CSV:
-      //   YYYY-MM-DD  (ISO),  M/D/YYYY or MM/DD/YYYY  (US locale)
+      //   YYYY-MM-DD  (ISO),  M/D/YYYY or MM/DD/YYYY  (US locale),  M.D.YYYY (dot locale)
       let eYear, eMonth, eDay;
       const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
       const usMatch  = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const dotMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
       if (isoMatch) {
         eYear = parseInt(isoMatch[1]); eMonth = parseInt(isoMatch[2]); eDay = parseInt(isoMatch[3]);
       } else if (usMatch) {
         eMonth = parseInt(usMatch[1]); eDay = parseInt(usMatch[2]); eYear = parseInt(usMatch[3]);
+      } else if (dotMatch) {
+        eMonth = parseInt(dotMatch[1]); eDay = parseInt(dotMatch[2]); eYear = parseInt(dotMatch[3]);
       } else { continue; }
       if (eYear !== year || eMonth !== month) continue;
 
