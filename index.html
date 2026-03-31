@@ -2898,8 +2898,8 @@ async function loadHopMaster() {
     const scheduleCol = header.findIndex(h => h.includes('SCHEDULE'));
     const timeCol     = header.findIndex(h => h.includes('TIME'));
     const activeCol   = header.findIndex(h => h.includes('ACTIVE'));
-    const startCol    = header.findIndex(h => h.includes('START'));
-    const endCol      = header.findIndex(h => h.includes('END'));
+    const startCol    = header.findIndex(h => h === 'START' || h === 'START_DATE' || h === 'START DATE' || h === 'STARTDATE');
+    const endCol      = header.findIndex(h => h === 'END' || h === 'END_DATE' || h === 'END DATE' || h === 'ENDDATE');
 
     if (nameCol === -1) return;
 
