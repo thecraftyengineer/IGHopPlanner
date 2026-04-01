@@ -1581,8 +1581,8 @@ function renderSummary() {
     <div class="chip"><span>${rollCallDone}/${rollCallTotal}</span>Roll Calls Committed To</div>`;
 }
 
-// How many days ahead to show in the "Coming up" banner
-const COMING_UP_DAYS = 3;
+// Minimum number of hops to show in the "Coming up" banner (always completes the last day)
+const COMING_UP_MIN_HOPS = 5;
 
 function renderNextUp() {
   // Always use real current date — not the browsed month
@@ -1591,54 +1591,58 @@ function renderNextUp() {
   const realMonth = _now.getMonth();
   const realDay = _now.getDate();
   const todayMs = new Date(realYear, realMonth, realDay, 12, 0, 0).getTime();
-  const cutoffMs = new Date(realYear, realMonth, realDay + COMING_UP_DAYS, 12, 0, 0).getTime();
 
-  // Fetch current month's hops
+  // Fetch current month and next month to have enough lookahead
   const currentMonthDates = getHopDates(realYear, realMonth + 1).filter(h => joined[h.name]);
-
-  // Check if the window crosses into next month — if so, fetch next month too
-  const daysInMonth = new Date(realYear, realMonth + 1, 0).getDate();
-  let nextMonthDates = [];
-  if (realDay + COMING_UP_DAYS > daysInMonth) {
-    const nMonth = realMonth === 11 ? 0 : realMonth + 1;
-    const nYear  = realMonth === 11 ? realYear + 1 : realYear;
-    nextMonthDates = getHopDates(nYear, nMonth + 1).filter(h => joined[h.name]);
-  }
+  const nMonth = realMonth === 11 ? 0 : realMonth + 1;
+  const nYear  = realMonth === 11 ? realYear + 1 : realYear;
+  const nextMonthDates = getHopDates(nYear, nMonth + 1).filter(h => joined[h.name]);
 
   if (!currentMonthDates.length && !nextMonthDates.length) return '';
 
-  // Build combined byDay map — current month uses day numbers as-is,
-  // next month entries are tagged with their actual date for display
-  const byDay = {};          // day number → hops (current month)
-  const byDayNext = {};      // day number → hops (next month)
+  // Build unified entries by day: [{ year, month, day, hops }]
+  const byDay = {};
+  const byDayNext = {};
   currentMonthDates.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
   nextMonthDates.forEach(h => { if (!byDayNext[h.day]) byDayNext[h.day] = []; byDayNext[h.day].push(h); });
 
-  // Get days within the next COMING_UP_DAYS window — from both months
-  // Build unified entries: [{ year, month, day, hops }]
-  const nMonth = realMonth === 11 ? 0 : realMonth + 1;
-  const nYear  = realMonth === 11 ? realYear + 1 : realYear;
-  const entries = [];
-
+  const allEntries = [];
   Object.keys(byDay).map(Number).forEach(d => {
     const dayDate = new Date(realYear, realMonth, d, 12, 0, 0);
-    const diff = Math.round((dayDate - todayMs) / (1000*60*60*24));
-    if (diff >= 0 && diff < COMING_UP_DAYS) {
-      entries.push({ year: realYear, month: realMonth, day: d, hops: byDay[d] });
+    if (dayDate.getTime() >= todayMs) {
+      allEntries.push({ year: realYear, month: realMonth, day: d, hops: byDay[d] });
     }
   });
   Object.keys(byDayNext).map(Number).forEach(d => {
-    const dayDate = new Date(nYear, nMonth, d, 12, 0, 0);
-    const diff = Math.round((dayDate - todayMs) / (1000*60*60*24));
-    if (diff >= 0 && diff < COMING_UP_DAYS) {
-      entries.push({ year: nYear, month: nMonth, day: d, hops: byDayNext[d] });
-    }
+    allEntries.push({ year: nYear, month: nMonth, day: d, hops: byDayNext[d] });
   });
 
   // Sort by actual date
-  entries.sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day));
+  allEntries.sort((a, b) => new Date(a.year, a.month, a.day) - new Date(b.year, b.month, b.day));
 
-  if (!entries.length) return '';
+  if (!allEntries.length) return '';
+
+  // Select entries: at least COMING_UP_MIN_HOPS hops, but always complete the last day
+  let hopCount = 0;
+  let cutoffDay = null; // the date object of the day we need to complete
+  const entries = [];
+  for (const entry of allEntries) {
+    if (cutoffDay) {
+      // We've hit our minimum — only include entries from the same day as the cutoff
+      const entryDate = new Date(entry.year, entry.month, entry.day).getTime();
+      if (entryDate <= cutoffDay) {
+        entries.push(entry);
+      } else {
+        break;
+      }
+    } else {
+      entries.push(entry);
+      hopCount += entry.hops.length;
+      if (hopCount >= COMING_UP_MIN_HOPS) {
+        cutoffDay = new Date(entry.year, entry.month, entry.day).getTime();
+      }
+    }
+  }
 
   // Helper: convert an ET time object to a real Date in user's local time
   // Returns null if the hop has no specific time (anytime hops)
@@ -1707,7 +1711,7 @@ function renderNextUp() {
     });
   }).length;
 
-  const title = visibleDayCount <= 1 ? `Coming up next` : `Coming up — next ${COMING_UP_DAYS} days`;
+  const title = visibleDayCount <= 1 ? `Coming up next` : `Coming up`;
 
   return `<div style="background:rgba(224,247,250,0.97);border:1.5px solid #00ACC1;border-radius:12px;padding:9px 13px;margin-bottom:0.75rem;display:flex;align-items:flex-start;gap:9px;">
     <div style="font-size:20px;line-height:1;flex-shrink:0;">&#127912;</div>
