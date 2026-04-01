@@ -124,12 +124,13 @@ body{
 .hop-tasks{padding:0.4rem 0.875rem 0.7rem;border-top:1.5px solid #dcc6f0;}
 .task-row{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:8px;margin-bottom:3px;background:transparent;transition:background 0.15s;}
 .task-row.c0{background:#FEE2E2;}.task-row.c1{background:#FEF3C7;}.task-row.c2{background:#D1FAE5;}
-.task-row.c3{background:#E0F2FE;}.task-row.c4{background:#f3e8ff;}.task-row.c5{background:#FCE7F3;}.task-row.c6{background:#ECFCCB;}
+.task-row.c3{background:#E0F2FE;}.task-row.c4{background:#f3e8ff;}.task-row.c5{background:#FCE7F3;}.task-row.c6{background:#ECFCCB;}.task-row.c7{background:#CCFBF1;}
 .task-chk{width:20px;height:20px;border-radius:5px;border:2px solid #d0b8e8;background:white;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent;-webkit-tap-highlight-color:transparent;}
 .task-chk.d0{background:#DC2626;border-color:#DC2626;color:white;}.task-chk.d1{background:#D97706;border-color:#D97706;color:white;}
 .task-chk.d2{background:#059669;border-color:#059669;color:white;}.task-chk.d3{background:#0284C7;border-color:#0284C7;color:white;}
 .task-chk.d4{background:#4B0082;border-color:#4B0082;color:white;}.task-chk.d5{background:#DB2777;border-color:#DB2777;color:white;}
 .task-chk.d6{background:#65A30D;border-color:#65A30D;color:white;}
+.task-chk.d7{background:#0D9488;border-color:#0D9488;color:white;}
 .task-lbl{font-size:12px;flex:1;color:#2d0050;font-weight:500;}
 .task-legend{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:0.75rem;}
 .legend-pill{padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;}
@@ -378,6 +379,7 @@ const ALL_TASKS = [
   { label: "Art scheduled" },
   { label: "Art posted" },
   { label: "Hopped through" },
+  { label: "Mailed/given/sold" },
 ];
 
 const TASK_COLORS = [
@@ -388,6 +390,7 @@ const TASK_COLORS = [
   { bg: "#f3e8ff", text: "#4B0082", chk: "#4B0082" },
   { bg: "#FCE7F3", text: "#831843", chk: "#DB2777" },
   { bg: "#ECFCCB", text: "#365314", chk: "#65A30D" },
+  { bg: "#CCFBF1", text: "#134E4A", chk: "#0D9488" },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -2235,7 +2238,7 @@ function printSchedule() {
   });
 
   // Short column headers for task columns
-  const shortLabels = ["Roll Call","Art","Photos","Post","Sched.","Posted","Hopped"];
+  const shortLabels = ["Roll Call","Art","Photos","Post","Sched.","Posted","Hopped","Mailed"];
   const taskHeaders = ALL_TASKS.map((t, i) =>
     `<th class="th-task">${shortLabels[i] || t.label}</th>`
   ).join("") + `<th class="th-notes">Notes</th>`;
