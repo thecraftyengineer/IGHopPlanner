@@ -3405,6 +3405,25 @@ function silentDriveRefresh() {
   }
 }
 
+// When tab becomes visible again (after sleep/background), check token freshness
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  // Only act if user had previously connected Drive
+  const token = localStorage.getItem('drive_token');
+  if (!token) return;
+  const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+  if (Date.now() > expiry - 2 * 60 * 1000) {
+    // Token expired or about to — refresh silently
+    silentDriveRefresh();
+  } else if (!driveAccessToken) {
+    // Token is still valid but lost from memory (page stayed open but variable cleared)
+    driveAccessToken = token;
+    driveFileId = localStorage.getItem('drive_file_id') || null;
+    updateDriveBar();
+    scheduleDriveRefresh(expiry);
+  }
+});
+
 // ═══════════════════════════════════════════════════════════════
 // TRANSLATE — in-place DOM translation using free Google Translate API
 // ═══════════════════════════════════════════════════════════════
