@@ -1622,11 +1622,41 @@ function renderNextUp() {
 
   if (!allEntries.length) return '';
 
+  // Helper: convert an ET time object to a real Date in user's local time
+  // Returns null if the hop has no specific time (anytime hops)
+  function hopEndTime(h, eYear, eMonth, day) {
+    if (!h.et) return null; // "Anytime" — never expires
+    let hour = h.et.h;
+    if (h.et.p === 'P' && hour !== 12) hour += 12;
+    if (h.et.p === 'A' && hour === 12) hour = 0;
+    const mins = h.et.m || 0;
+    const etStr = `${eYear}-${String(eMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(mins).padStart(2,'0')}:00`;
+    const etDate = new Date(etStr);
+    const etOffset = new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'}));
+    const utcMs = etDate.getTime() - (etOffset.getTime() - etDate.getTime());
+    return new Date(utcMs);
+  }
+
+  // Pre-filter today's already-passed hops so they don't inflate the count
+  allEntries.forEach(entry => {
+    const isToday = entry.year === realYear && entry.month === realMonth && entry.day === realDay;
+    if (isToday) {
+      entry.hops = entry.hops.filter(h => {
+        const endTime = hopEndTime(h, entry.year, entry.month, entry.day);
+        if (!endTime) return true; // "Anytime" hops — keep
+        return endTime > _now;
+      });
+    }
+  });
+  // Remove any entries that ended up with 0 hops after filtering
+  const filteredEntries = allEntries.filter(e => e.hops.length > 0);
+  if (!filteredEntries.length) return '';
+
   // Select entries: at least COMING_UP_MIN_HOPS hops, but always complete the last day
   let hopCount = 0;
   let cutoffDay = null; // the date object of the day we need to complete
   const entries = [];
-  for (const entry of allEntries) {
+  for (const entry of filteredEntries) {
     if (cutoffDay) {
       // We've hit our minimum — only include entries from the same day as the cutoff
       const entryDate = new Date(entry.year, entry.month, entry.day).getTime();
@@ -1642,21 +1672,6 @@ function renderNextUp() {
         cutoffDay = new Date(entry.year, entry.month, entry.day).getTime();
       }
     }
-  }
-
-  // Helper: convert an ET time object to a real Date in user's local time
-  // Returns null if the hop has no specific time (anytime hops)
-  function hopEndTime(h, eYear, eMonth, day) {
-    if (!h.et) return null; // "Anytime" — never expires
-    let hour = h.et.h;
-    if (h.et.p === 'P' && hour !== 12) hour += 12;
-    if (h.et.p === 'A' && hour === 12) hour = 0;
-    const mins = h.et.m || 0;
-    const etStr = `${eYear}-${String(eMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}T${String(hour).padStart(2,'0')}:${String(mins).padStart(2,'0')}:00`;
-    const etDate = new Date(etStr);
-    const etOffset = new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'}));
-    const utcMs = etDate.getTime() - (etOffset.getTime() - etDate.getTime());
-    return new Date(utcMs);
   }
 
   const sections = entries.map(entry => {
