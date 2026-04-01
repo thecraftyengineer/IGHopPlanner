@@ -473,7 +473,7 @@ let HOP_INFO = {
 let HOP_DATES = [];
 
 function getTasksForHop(n) {
-  return HOP_TASKS[n] !== undefined ? HOP_TASKS[n] : [0,1,2,3,4,5,6];
+  return HOP_TASKS[n] !== undefined ? HOP_TASKS[n] : [0,1,2,3,4,5,6,7];
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -2209,7 +2209,7 @@ function printSchedule() {
     const isPast = new Date(vYear, vMonth, d) < today0;
     if (isPast && !includePast) return;
     HOP_DATES.filter(h => h.day === d && joined[h.name]).forEach(h => {
-      const taskIndices = getTasksForHop(h.name); // array of indices e.g. [0,1,2,3,4,5,6]
+      const taskIndices = getTasksForHop(h.name); // array of indices e.g. [0,1,2,3,4,5,6,7]
       const ok = okey(d, h.name, h.sub);
       const taskCells = ALL_TASKS.map((t, i) => {
         if (!taskIndices.includes(i)) return '<td class="tc na"></td>';
