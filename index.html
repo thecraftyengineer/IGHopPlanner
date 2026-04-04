@@ -1416,7 +1416,7 @@ function loadState() {
 function convertTime(et) { return convertTimeIANA(et); }
 
 // Task key — includes day, so tasks are per-occurrence and reset fresh each month
-function okey(day, name, sub) { return `${vYear}-${vMonth}-${day}|${name}${sub ? '::' + sub : ''}`; }
+function okey(day, name, sub, year, month) { const y = year !== undefined ? year : vYear; const m = month !== undefined ? month : vMonth; return `${y}-${m}-${day}|${name}${sub ? '::' + sub : ''}`; }
 function tkey(ok, i) { return ok + '###' + i; }
 
 // Roll call (task 0) — three-state: 'yes', 'no', or null (blank)
@@ -1449,7 +1449,7 @@ function cycleRollCall(idx, currentState, target) {
 }
 
 // Notes key — month-scoped only (not day), so one note per hop per month, kept forever
-function nkey(day, name, sub) { return `${vYear}-${vMonth}-${day}|${name}${sub ? '::' + sub : ''}`; }
+function nkey(day, name, sub, year, month) { const y = year !== undefined ? year : vYear; const m = month !== undefined ? month : vMonth; return `${y}-${m}-${day}|${name}${sub ? '::' + sub : ''}`; }
 function safe(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
 
 function isDatePast(day) {
@@ -1740,9 +1740,9 @@ function renderNextUp() {
   </div>`;
 }
 
-function buildHopCard(h, isPast) {
-  const ok = okey(h.day, h.name, h.sub);
-  const nk = nkey(h.day, h.name, h.sub);
+function buildHopCard(h, isPast, cardYear, cardMonth) {
+  const ok = okey(h.day, h.name, h.sub, cardYear, cardMonth);
+  const nk = nkey(h.day, h.name, h.sub, cardYear, cardMonth);
   const isOpen = !!expanded[ok];
   const isInfoOpen = !!infoOpen[ok];
   const taskIndices = getTasksForHop(h.name);
@@ -1801,7 +1801,7 @@ function buildHopCard(h, isPast) {
     }).join('')}
     <div class="notes-wrap">
       <div class="notes-lbl">Notes (add any themes or details here)</div>
-      <textarea class="notes-ta" placeholder="Add notes for ${MONTH_NAMES[vMonth]}…" onclick="event.stopPropagation()" oninput="saveNote('${safeNk}',this.value)">${notes[nk] || ''}</textarea>
+      <textarea class="notes-ta" placeholder="Add notes for ${MONTH_NAMES[cardMonth !== undefined ? cardMonth : vMonth]}…" onclick="event.stopPropagation()" oninput="saveNote('${safeNk}',this.value)">${notes[nk] || ''}</textarea>
     </div>
   </div>` : '';
 
@@ -2062,7 +2062,7 @@ function renderSchedule() {
       const wd = new Date(nextYear, nextMonth, day).getDay();
       return `<div class="day-group">
         <div class="day-header" style="opacity:0.75;">${DAY_NAMES[wd]}, ${nextMn} ${day}</div>
-        ${bufByDay[day].map(h => buildHopCard(h, false)).join('')}
+        ${bufByDay[day].map(h => buildHopCard(h, false, nextYear, nextMonth)).join('')}
       </div>`;
     }).join('');
   }
