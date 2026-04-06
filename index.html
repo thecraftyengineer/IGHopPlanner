@@ -393,6 +393,8 @@ const TASK_COLORS = [
   { bg: "#CCFBF1", text: "#134E4A", chk: "#0D9488" },
 ];
 
+const TASK_SHORT_LABELS = ["Roll Call","Art","Photos","Post","Sched.","Posted","Hopped","Mailed"];
+
 // ═══════════════════════════════════════════════════════════════
 // GOOGLE SHEETS CONFIG
 // ═══════════════════════════════════════════════════════════════
@@ -1347,7 +1349,7 @@ const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 // ═══════════════════════════════════════════════════════════════
 let vYear = 2026, vMonth = 2;
 let joined = {}, tasksDone = {}, notes = {}, expanded = {}, infoExpanded = {}, infoOpen = {};
-let activeTab = 'home', userTZ = 'America/New_York', showPast = false, hopSortAlpha = true;
+let activeTab = 'home', userTZ = 'America/New_York', showPast = false, hopSortAlpha = true, schedSearch = '';
 let homeInstrOpen = true; // instructions expanded by default on Home tab
 let hopsInstrOpen = false; // instructions collapsed by default on All Hops tab
 let hopsListOpen = true;   // hop list expanded by default on All Hops tab
@@ -1496,10 +1498,19 @@ function changeMonth(d) {
   if (vMonth > 11) { vMonth = 0; vYear++; }
   if (vMonth < 0) { vMonth = 11; vYear--; }
   showPast = false;
+  schedSearch = '';
   saveState();
   render();
   // Load events for the new month (uses cache if already loaded)
   loadEvents(vYear, vMonth + 1);
+}
+
+function schedSearchUpdate(el) {
+  const pos = el.selectionStart;
+  schedSearch = el.value;
+  render();
+  const inp = document.querySelector('input[placeholder="Search hops…"]');
+  if (inp) { inp.focus(); inp.setSelectionRange(pos, pos); }
 }
 
 function setTab(t) {
@@ -1771,6 +1782,12 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
     return !!tasksDone[tkey(ok, i)];
   }).length;
 
+  // Colored dots for completed tasks (shown on collapsed card)
+  const doneDots = taskIndices
+    .filter(i => i === 0 ? rcState === 'yes' : !!tasksDone[tkey(ok, i)])
+    .map(i => `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${TASK_COLORS[i].chk};" title="${TASK_SHORT_LABELS[i]}"></span>`)
+    .join('');
+
   const infoPanel = isInfoOpen && info ? `<div class="hop-info-panel">
     ${renderHopGraphic(h.name, true)}
     <div class="hop-info-desc">${info.desc}</div>
@@ -1778,6 +1795,9 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   </div>` : '';
 
   const taskPanel = isOpen ? `<div class="hop-tasks">
+    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 8px 6px;font-size:9px;color:#666;border-bottom:1px solid #f0e6f6;">
+      ${taskIndices.map(i => `<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${TASK_COLORS[i].chk};"></span>${TASK_SHORT_LABELS[i]}</span>`).join('')}
+    </div>
     ${taskIndices.map(i => {
       if (i === 0) {
         // Roll call — Yes / No buttons
@@ -1812,7 +1832,7 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
         ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : ''}
       </div>
       <div class="hop-card-meta">
-        ${doneCount > 0 ? `<span class="hop-prog">${doneCount}/${taskIndices.length}</span>` : ''}
+        ${doneCount > 0 ? `<span class="hop-prog">${doneCount}/${taskIndices.length}</span><span style="display:inline-flex;gap:3px;align-items:center;margin-right:4px;">${doneDots}</span>` : ''}
         <span class="hop-time">${timeStr}</span>
         <button class="hop-info-pill ${isInfoOpen ? 'active' : ''}" onclick="event.stopPropagation();toggleInfoOpen('${safeOk}')">${isInfoOpen ? 'Hide info' : 'Info'}</button>
         <span class="expand-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
@@ -2004,8 +2024,20 @@ function toggleHopsList()  { hopsListOpen  = !hopsListOpen;  render(); }
 
 function renderSchedule() {
   const mn = MONTH_NAMES[vMonth];
-  const myDates = HOP_DATES.filter(h => joined[h.name]);
+  let myDates = HOP_DATES.filter(h => joined[h.name]);
   if (!myDates.length) return `<div class="hint-box"><div class="hint-step"><div class="hint-num">!</div><div class="hint-text">You haven't selected any hops for <strong>${mn}</strong> yet. Go to <strong>All Hops</strong> and tap the circle next to each hop you've joined.</div></div></div>`;
+
+  // Search filter
+  const searchBox = myDates.length > 10 ? `<div style="padding:8px 4px 4px;">
+    <input type="text" placeholder="Search hops…" value="${schedSearch.replace(/"/g,'&quot;')}"
+      oninput="schedSearchUpdate(this)"
+      style="width:100%;padding:7px 10px;border:1.5px solid #d0b8e8;border-radius:8px;font-size:13px;outline:none;background:white;">
+  </div>` : '';
+
+  if (schedSearch) {
+    const q = schedSearch.toLowerCase();
+    myDates = myDates.filter(h => h.name.toLowerCase().includes(q));
+  }
 
   const byDay = {};
   myDates.forEach(h => { if (!byDay[h.day]) byDay[h.day] = []; byDay[h.day].push(h); });
@@ -2014,7 +2046,11 @@ function renderSchedule() {
   const futureDays = days.filter(d => !isDatePast(d));
   const pastHopCount = pastDays.reduce((s,d) => s + byDay[d].length, 0);
 
-  let html = renderNextUp();
+  let html = searchBox + (schedSearch ? '' : renderNextUp());
+
+  if (schedSearch && !myDates.length) {
+    return html + `<div style="padding:1rem;text-align:center;color:#888;font-size:13px;">No hops matching "${schedSearch.replace(/</g,'&lt;')}"</div>`;
+  }
 
   if (pastDays.length) {
     html += `<div class="past-toggle" onclick="toggleShowPast()">
@@ -2048,7 +2084,8 @@ function renderSchedule() {
   const nextYear  = vMonth === 11 ? vYear + 1 : vYear;
   const nextMn    = MONTH_NAMES[nextMonth];
   const bufferDates = getHopDates(nextYear, nextMonth + 1)
-    .filter(h => joined[h.name] && h.day <= 7);
+    .filter(h => joined[h.name] && h.day <= 7)
+    .filter(h => !schedSearch || h.name.toLowerCase().includes(schedSearch.toLowerCase()));
   if (bufferDates.length) {
     const bufByDay = {};
     bufferDates.forEach(h => { if (!bufByDay[h.day]) bufByDay[h.day] = []; bufByDay[h.day].push(h); });
