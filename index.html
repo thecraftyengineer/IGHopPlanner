@@ -104,7 +104,7 @@ body{
 .day-header.today-hdr{color:#4B0082;font-size:12px;}
 .hop-card{border-radius:14px;margin-bottom:5px;overflow:hidden;background:rgba(243,232,255,0.93);border:2px solid #4B0082;-webkit-tap-highlight-color:transparent;}
 .hop-card.past-card{opacity:0.55;}
-.hop-card-top{display:flex;align-items:center;gap:8px;padding:0.625rem 0.875rem;cursor:pointer;user-select:none;}
+.hop-card-top{display:flex;align-items:flex-start;gap:8px;padding:0.625rem 0.875rem;cursor:pointer;user-select:none;}
 .hop-card-name{font-size:13px;font-weight:500;flex:1;line-height:1.3;color:#2d0050;}
 .hop-card-sub{font-size:11px;font-weight:400;margin-top:2px;color:#7b2fbe;}
 .hop-card-meta{display:flex;align-items:center;gap:5px;flex-shrink:0;}
@@ -1825,13 +1825,12 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   return `<div class="hop-card ${isPast ? 'past-card' : ''}">
     <div class="hop-card-top" onclick="toggleExpand('${safeOk}')">
       <div style="flex:1;min-width:0;">
-        <div class="hop-card-name">${h.name}</div>
+        <div class="hop-card-name">${h.name}${rcBadge}</div>
         ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : ''}
       </div>
       <div class="hop-card-meta">
-        <span class="hop-time">${timeStr}</span>
-        ${rcBadge}
         ${doneCount > 0 ? `<span style="display:inline-flex;gap:3px;align-items:center;">${doneDots}</span><span class="hop-prog">${doneCount}/${taskIndices.length}</span>` : ''}
+        <span class="hop-time">${timeStr}</span>
         <button class="hop-info-pill ${isInfoOpen ? 'active' : ''}" onclick="event.stopPropagation();toggleInfoOpen('${safeOk}')">${isInfoOpen ? 'Hide info' : 'Info'}</button>
         <span class="expand-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
       </div>
