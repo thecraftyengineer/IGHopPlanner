@@ -1795,9 +1795,6 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   </div>` : '';
 
   const taskPanel = isOpen ? `<div class="hop-tasks">
-    <div style="display:flex;flex-wrap:wrap;gap:6px 10px;padding:4px 8px 6px;font-size:9px;color:#666;border-bottom:1px solid #f0e6f6;">
-      ${taskIndices.map(i => `<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${TASK_COLORS[i].chk};"></span>${TASK_SHORT_LABELS[i]}</span>`).join('')}
-    </div>
     ${taskIndices.map(i => {
       if (i === 0) {
         // Roll call — Yes / No buttons
@@ -1828,12 +1825,13 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   return `<div class="hop-card ${isPast ? 'past-card' : ''}">
     <div class="hop-card-top" onclick="toggleExpand('${safeOk}')">
       <div style="flex:1;min-width:0;">
-        <div class="hop-card-name">${h.name}${rcBadge}</div>
+        <div class="hop-card-name">${h.name}</div>
         ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : ''}
       </div>
       <div class="hop-card-meta">
-        ${doneCount > 0 ? `<span class="hop-prog">${doneCount}/${taskIndices.length}</span><span style="display:inline-flex;gap:3px;align-items:center;margin-right:4px;">${doneDots}</span>` : ''}
         <span class="hop-time">${timeStr}</span>
+        ${rcBadge}
+        ${doneCount > 0 ? `<span style="display:inline-flex;gap:3px;align-items:center;">${doneDots}</span><span class="hop-prog">${doneCount}/${taskIndices.length}</span>` : ''}
         <button class="hop-info-pill ${isInfoOpen ? 'active' : ''}" onclick="event.stopPropagation();toggleInfoOpen('${safeOk}')">${isInfoOpen ? 'Hide info' : 'Info'}</button>
         <span class="expand-arrow ${isOpen ? 'open' : ''}">&#9655;</span>
       </div>
@@ -2047,6 +2045,11 @@ function renderSchedule() {
   const pastHopCount = pastDays.reduce((s,d) => s + byDay[d].length, 0);
 
   let html = searchBox + (schedSearch ? '' : renderNextUp());
+
+  // Color legend for task dots
+  html += `<div style="display:flex;flex-wrap:wrap;gap:4px 10px;padding:6px 10px;font-size:9px;color:#666;">
+    ${ALL_TASKS.map((t, i) => `<span style="display:inline-flex;align-items:center;gap:3px;"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${TASK_COLORS[i].chk};"></span>${TASK_SHORT_LABELS[i]}</span>`).join('')}
+  </div>`;
 
   if (schedSearch && !myDates.length) {
     return html + `<div style="padding:1rem;text-align:center;color:#888;font-size:13px;">No hops matching "${schedSearch.replace(/</g,'&lt;')}"</div>`;
