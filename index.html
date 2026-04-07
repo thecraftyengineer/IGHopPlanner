@@ -1347,7 +1347,7 @@ const DAY_SHORT = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 //
 //   userTZ, vYear, vMonth — persisted so the app reopens where you left off.
 // ═══════════════════════════════════════════════════════════════
-let vYear = 2026, vMonth = 2;
+let vYear = new Date().getFullYear(), vMonth = new Date().getMonth();
 let joined = {}, tasksDone = {}, notes = {}, expanded = {}, infoExpanded = {}, infoOpen = {};
 let activeTab = 'home', userTZ = 'America/New_York', showPast = false, hopSortAlpha = true, schedSearch = '';
 let homeInstrOpen = true; // instructions expanded by default on Home tab
@@ -1407,6 +1407,13 @@ function loadState() {
     }
     if (yr) vYear     = parseInt(yr);
     if (mo) vMonth    = parseInt(mo);
+    // Auto-advance to current month if saved month is in the past
+    const _now = new Date();
+    const _curY = _now.getFullYear(), _curM = _now.getMonth();
+    if (vYear < _curY || (vYear === _curY && vMonth < _curM)) {
+      vYear = _curY;
+      vMonth = _curM;
+    }
     return !!tz; // true = TZ was previously set → skip welcome screen, go to All Hops
   } catch(e) { return false; }
 }
