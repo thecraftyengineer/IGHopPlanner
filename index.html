@@ -1519,9 +1519,13 @@ function changeMonth(d) {
   schedSearch = '';
   saveState();
   render();
-  // Load events and themes for the new month (uses cache if already loaded)
+  // Load events and themes for the new month and next month (for buffer cards)
   loadEvents(vYear, vMonth + 1);
   loadThemes(vYear, vMonth + 1);
+  const _nm = vMonth === 11 ? 0 : vMonth + 1;
+  const _ny = vMonth === 11 ? vYear + 1 : vYear;
+  loadEvents(_ny, _nm + 1);
+  loadThemes(_ny, _nm + 1);
 }
 
 function schedSearchUpdate(el) {
@@ -3187,11 +3191,17 @@ async function refreshData() {
   if (btn) { btn.style.opacity = '0.4'; btn.style.pointerEvents = 'none'; }
   masterLoaded = false;
   scheduleLoaded = false;
+  const _nm = vMonth === 11 ? 0 : vMonth + 1;
+  const _ny = vMonth === 11 ? vYear + 1 : vYear;
   delete EVENTS_CACHE[`${vYear}-${vMonth + 1}`];
   delete THEMES_CACHE[`${vYear}-${vMonth + 1}`];
+  delete EVENTS_CACHE[`${_ny}-${_nm + 1}`];
+  delete THEMES_CACHE[`${_ny}-${_nm + 1}`];
   await loadHopMaster();
   await loadEvents(vYear, vMonth + 1);
   await loadThemes(vYear, vMonth + 1);
+  loadEvents(_ny, _nm + 1);
+  loadThemes(_ny, _nm + 1);
   if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
 }
 
@@ -3733,7 +3743,12 @@ async function translateDOM() {
   render();
   // Must await loadHopMaster so ALL_HOPS is populated before loadEvents
   // tries to match event names against it
-  loadHopMaster().then(() => { loadEvents(vYear, vMonth + 1); loadThemes(vYear, vMonth + 1); });
+  loadHopMaster().then(() => {
+    loadEvents(vYear, vMonth + 1); loadThemes(vYear, vMonth + 1);
+    const _nm = vMonth === 11 ? 0 : vMonth + 1;
+    const _ny = vMonth === 11 ? vYear + 1 : vYear;
+    loadEvents(_ny, _nm + 1); loadThemes(_ny, _nm + 1);
+  });
 })();
 </script>
 </body>
