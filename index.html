@@ -1217,7 +1217,7 @@ function getHopDates(year, month) {
   const eventKeys = new Set(events.map(e => `${e.day}|${e.name}`));
   const filteredBase = base.filter(h => !eventKeys.has(`${h.day}|${h.name}`));
 
-  return [...filteredBase, ...events].sort((a, b) => {
+  const merged = [...filteredBase, ...events].sort((a, b) => {
     if (a.day !== b.day) return a.day - b.day;
     const toMins = et => {
       if (!et) return -1;
@@ -1228,6 +1228,17 @@ function getHopDates(year, month) {
     };
     return toMins(a.et) - toMins(b.et);
   });
+
+  // Apply themes from THEMES tab (stored as h.theme, NOT h.sub, to avoid changing okey)
+  const themes = THEMES_CACHE[cacheKey] || {};
+  merged.forEach(h => {
+    if (!h.sub) {
+      const theme = themes[`${h.day}|${h.name}`];
+      if (theme) h.theme = theme;
+    }
+  });
+
+  return merged;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1508,8 +1519,9 @@ function changeMonth(d) {
   schedSearch = '';
   saveState();
   render();
-  // Load events for the new month (uses cache if already loaded)
+  // Load events and themes for the new month (uses cache if already loaded)
   loadEvents(vYear, vMonth + 1);
+  loadThemes(vYear, vMonth + 1);
 }
 
 function schedSearchUpdate(el) {
@@ -1714,6 +1726,7 @@ function renderNextUp() {
     const hopItems = hops.map(h => {
       const t = convertTime(h.et);
       const label = h.sub ? h.sub : h.name;
+      const themeTag = !h.sub && h.theme ? ` <span style="font-size:10px;color:#7b2fbe;font-weight:400;">— ${h.theme}</span>` : '';
       const taskIndices = getTasksForHop(h.name);
       let rcBadge = '';
       if (taskIndices.includes(0)) {
@@ -1728,7 +1741,7 @@ function renderNextUp() {
           rcBadge = `<span style="font-size:10px;color:#9d6bbf;font-weight:400;margin-left:5px;">· response not given</span>`;
         }
       }
-      return `<div style="font-size:12px;color:#004D40;line-height:1.55;"><strong>${label}</strong> <span style="color:#00838F;font-size:11px;">${t}</span>${rcBadge}</div>`;
+      return `<div style="font-size:12px;color:#004D40;line-height:1.55;"><strong>${label}</strong>${themeTag} <span style="color:#00838F;font-size:11px;">${t}</span>${rcBadge}</div>`;
     }).join('');
 
     return `<div style="margin-bottom:6px;">
@@ -1833,7 +1846,7 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
     <div class="hop-card-top" onclick="toggleExpand('${safeOk}')">
       <div style="flex:1;min-width:0;">
         <div class="hop-card-name">${h.name}${rcBadge}</div>
-        ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : ''}
+        ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : h.theme ? `<div class="hop-card-sub">${h.theme}</div>` : ''}
       </div>
       <div class="hop-card-meta">
         ${doneCount > 0 ? `<span style="display:inline-flex;gap:3px;align-items:center;">${doneDots}</span><span class="hop-prog">${doneCount}/${taskIndices.length}</span>` : ''}
@@ -2135,7 +2148,7 @@ function renderCalendar() {
     const hopEls = hops.map(h => {
       const isJoined = !!joined[h.name];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? `${h.sub} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      const label = h.sub ? `${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
       return `<div class="vcal-hop ${isJoined ? 'joined' : ''}">${label}</div>`;
     }).join('');
     cells += `<div class="vcal-cell ${isPast && !todayDay ? 'past-cell' : ''}">${numEl}${hopEls}</div>`;
@@ -2270,7 +2283,7 @@ function printSchedule() {
         const done = !!tasksDone[tkey(ok, i)];
         return `<td class="tc ${done ? "done" : ""}">${done ? "&#10003;" : ""}</td>`;
       }).join("");
-      const name = h.sub ? `${h.name} – ${h.sub}` : h.name;
+      const name = h.sub ? `${h.name} – ${h.sub}` : h.theme ? `${h.name} – ${h.theme}` : h.name;
       const time = convertTime(h.et);
       const noteVal = notes[nkey(d, h.name, h.sub)] || '';
       rows.push(`<tr class="${isPast ? "past" : ""}">
@@ -2368,7 +2381,7 @@ function printList() {
     byDay[d].forEach(h => {
       const isJ = !!joined[h.name];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? `${h.name} – ${h.sub} (${timeStr})` : `${h.name} (${timeStr})`;
+      const label = h.sub ? `${h.name} – ${h.sub} (${timeStr})` : h.theme ? `${h.name} – ${h.theme} (${timeStr})` : `${h.name} (${timeStr})`;
       body += `<div class="hop ${isJ ? 'joined' : ''}">${d}: ${label}</div>`;
     });
   });
@@ -2391,7 +2404,7 @@ function printCal() {
     const hopHtml = hops.map(h => {
       const isJ = !!joined[h.name];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? `${h.sub} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      const label = h.sub ? `${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
       return `<div style="font-size:7.5px;line-height:1.35;padding:1px 2px;margin-bottom:1px;border-radius:2px;${isJ ? 'background:#f3e8ff;color:#2d0050;font-weight:bold;border-left:2px solid #4B0082;padding-left:2px;' : 'color:#555;'}">${label}</div>`;
     }).join('');
     rows += `<td style="border:1px solid #e0d0f0;padding:4px;vertical-align:top;min-height:90px;">
@@ -2481,7 +2494,7 @@ function printCalendarMySchedule() {
       const ci = hopColorMap[h.name] !== undefined ? hopColorMap[h.name] : 0;
       const c = PILL_COLORS[ci];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? h.sub : h.name;
+      const label = h.sub ? h.sub : h.theme ? `${h.name} — ${h.theme}` : h.name;
       const ok = okey(d, h.name, h.sub);
       const taskIndices = getTasksForHop(h.name);
       const doneCount = taskIndices.filter(i => tasksDone[tkey(ok, i)]).length;
@@ -2668,7 +2681,7 @@ function exportCalendar() {
     const mm = String(h.month).padStart(2, '0');
     const dd = String(h.day).padStart(2, '0');
     const dateStr = `${h.year}${mm}${dd}`;
-    const title = h.sub ? `${h.name} — ${h.sub}` : h.name;
+    const title = h.sub ? `${h.name} — ${h.sub}` : h.theme ? `${h.name} — ${h.theme}` : h.name;
     const uid = `hop-${dateStr}-${idx}-${h.name.replace(/[^a-zA-Z0-9]/g, '')}@craftyengineer`;
 
     // Description with DM info if available
@@ -3114,6 +3127,60 @@ async function loadEvents(year, month) {
   }
 }
 
+// THEMES tab — per-occurrence themes for scheduled hops
+let THEMES_CACHE = {}; // keyed "YYYY-M" → { "day|hopName": "theme text" }
+
+async function loadThemes(year, month) {
+  const cacheKey = `${year}-${month}`;
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=THEMES`;
+    const resp = await fetch(url);
+    if (!resp.ok) { THEMES_CACHE[cacheKey] = THEMES_CACHE[cacheKey] || {}; return; }
+    const csv = await resp.text();
+    const rows = parseSheetCSV(csv);
+    if (rows.length < 2) { THEMES_CACHE[cacheKey] = {}; return; }
+
+    const header = rows[0].map(h => h.toUpperCase().trim());
+    const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const dateCol  = header.findIndex(h => h.includes('DATE'));
+    const themeCol = header.findIndex(h => h.includes('THEME'));
+    if (nameCol === -1 || dateCol === -1 || themeCol === -1) { THEMES_CACHE[cacheKey] = {}; return; }
+
+    const themes = {};
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const dateStr = (row[dateCol] || '').trim();
+      if (!dateStr) continue;
+      let eYear, eMonth, eDay;
+      const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      const usMatch  = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      const dotMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if (isoMatch) {
+        eYear = parseInt(isoMatch[1]); eMonth = parseInt(isoMatch[2]); eDay = parseInt(isoMatch[3]);
+      } else if (usMatch) {
+        eMonth = parseInt(usMatch[1]); eDay = parseInt(usMatch[2]); eYear = parseInt(usMatch[3]);
+      } else if (dotMatch) {
+        eMonth = parseInt(dotMatch[1]); eDay = parseInt(dotMatch[2]); eYear = parseInt(dotMatch[3]);
+      } else { continue; }
+      if (eYear !== year || eMonth !== month) continue;
+
+      const rawName = (row[nameCol] || '').trim();
+      const theme = (row[themeCol] || '').trim();
+      if (!rawName || !theme) continue;
+
+      const matched = ALL_HOPS.find(h => h.toLowerCase() === rawName.toLowerCase());
+      const finalName = matched || rawName;
+      themes[`${eDay}|${finalName}`] = theme;
+    }
+
+    THEMES_CACHE[cacheKey] = themes;
+    render();
+  } catch(e) {
+    console.log('THEMES load error:', e.message);
+    THEMES_CACHE[cacheKey] = THEMES_CACHE[cacheKey] || {};
+  }
+}
+
 // Manual refresh — reloads HOP_MASTER and EVENTS for current month
 async function refreshData() {
   const btn = document.getElementById('refresh-btn');
@@ -3121,8 +3188,10 @@ async function refreshData() {
   masterLoaded = false;
   scheduleLoaded = false;
   delete EVENTS_CACHE[`${vYear}-${vMonth + 1}`];
+  delete THEMES_CACHE[`${vYear}-${vMonth + 1}`];
   await loadHopMaster();
   await loadEvents(vYear, vMonth + 1);
+  await loadThemes(vYear, vMonth + 1);
   if (btn) { btn.style.opacity = ''; btn.style.pointerEvents = ''; }
 }
 
@@ -3664,7 +3733,7 @@ async function translateDOM() {
   render();
   // Must await loadHopMaster so ALL_HOPS is populated before loadEvents
   // tries to match event names against it
-  loadHopMaster().then(() => loadEvents(vYear, vMonth + 1));
+  loadHopMaster().then(() => { loadEvents(vYear, vMonth + 1); loadThemes(vYear, vMonth + 1); });
 })();
 </script>
 </body>
