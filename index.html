@@ -1730,7 +1730,6 @@ function renderNextUp() {
     const hopItems = hops.map(h => {
       const t = convertTime(h.et);
       const label = h.sub ? h.sub : h.name;
-      const themeTag = !h.sub && h.theme ? ` <span style="font-size:10px;color:#7b2fbe;font-weight:400;">— ${h.theme}</span>` : '';
       const taskIndices = getTasksForHop(h.name);
       let rcBadge = '';
       if (taskIndices.includes(0)) {
@@ -1745,7 +1744,7 @@ function renderNextUp() {
           rcBadge = `<span style="font-size:10px;color:#9d6bbf;font-weight:400;margin-left:5px;">· response not given</span>`;
         }
       }
-      return `<div style="font-size:12px;color:#004D40;line-height:1.55;"><strong>${label}</strong>${themeTag} <span style="color:#00838F;font-size:11px;">${t}</span>${rcBadge}</div>`;
+      return `<div style="font-size:12px;color:#004D40;line-height:1.55;"><strong>${label}</strong> <span style="color:#00838F;font-size:11px;">${t}</span>${rcBadge}</div>`;
     }).join('');
 
     return `<div style="margin-bottom:6px;">
