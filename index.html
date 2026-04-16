@@ -231,6 +231,8 @@ body{
       <option value="America/Halifax">Atlantic Time (AST/ADT)</option>
       <option value="America/Chicago">Central Time (CST/CDT)</option>
       <option value="America/Denver">Mountain Time (MST/MDT)</option>
+      <option value="America/Phoenix">Arizona (MST, no DST)</option>
+      <option value="America/Regina">Saskatchewan (CST, no DST)</option>
       <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
       <option value="America/Anchorage">Alaska (AKST/AKDT)</option>
       <option value="Pacific/Honolulu">Hawaii (HST)</option>
@@ -1247,7 +1249,7 @@ function getHopDates(year, month) {
 // IANA timezone → short label map
 const TZ_LABELS = {
   "America/New_York":"EST/EDT","America/Halifax":"AST/ADT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
-  "America/Los_Angeles":"PST/PDT","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
+  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Regina":"CST","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
   "Europe/London":"GMT/BST","Europe/Paris":"CET/CEST","Europe/Helsinki":"EET/EEST",
   "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
   "Asia/Tokyo":"JST","Australia/Sydney":"AEST/AEDT","Pacific/Auckland":"NZST/NZDT"
@@ -1259,6 +1261,8 @@ const TZ_DST_LABELS = {
   "America/Halifax":      { "-4":"AST", "-3":"ADT" },
   "America/Chicago":      { "-6":"CST", "-5":"CDT" },
   "America/Denver":       { "-7":"MST", "-6":"MDT" },
+  "America/Phoenix":       { "-7":"MST" },
+  "America/Regina":        { "-6":"CST" },
   "America/Los_Angeles":  { "-8":"PST", "-7":"PDT" },
   "America/Anchorage":    { "-9":"AKST","-8":"AKDT" },
   "Pacific/Honolulu":     { "-10":"HST" },
@@ -1875,6 +1879,8 @@ function renderHome() {
     ["America/Halifax","Atlantic Time (AST/ADT)"],
     ["America/Chicago","Central Time (CST/CDT)"],
     ["America/Denver","Mountain Time (MST/MDT)"],
+    ["America/Phoenix","Arizona (MST, no DST)"],
+    ["America/Regina","Saskatchewan (CST, no DST)"],
     ["America/Los_Angeles","Pacific Time (PST/PDT)"],
     ["America/Anchorage","Alaska (AKST/AKDT)"],
     ["Pacific/Honolulu","Hawaii (HST)"],
