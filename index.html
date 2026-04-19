@@ -234,6 +234,7 @@ body{
       <option value="America/Phoenix">Arizona (MST, no DST)</option>
       <option value="America/Regina">Saskatchewan (CST, no DST)</option>
       <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
+      <option value="America/Dawson_Creek">British Columbia (PT, no DST)</option>
       <option value="America/Anchorage">Alaska (AKST/AKDT)</option>
       <option value="Pacific/Honolulu">Hawaii (HST)</option>
       <option value="Europe/London">United Kingdom (GMT/BST)</option>
@@ -1249,7 +1250,7 @@ function getHopDates(year, month) {
 // IANA timezone → short label map
 const TZ_LABELS = {
   "America/New_York":"EST/EDT","America/Halifax":"AST/ADT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
-  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Regina":"CST","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
+  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Dawson_Creek":"PT (UTC-7)","America/Regina":"CST","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
   "Europe/London":"GMT/BST","Europe/Paris":"CET/CEST","Europe/Helsinki":"EET/EEST",
   "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
   "Asia/Tokyo":"JST","Australia/Sydney":"AEST/AEDT","Pacific/Auckland":"NZST/NZDT"
@@ -1264,6 +1265,7 @@ const TZ_DST_LABELS = {
   "America/Phoenix":       { "-7":"MST" },
   "America/Regina":        { "-6":"CST" },
   "America/Los_Angeles":  { "-8":"PST", "-7":"PDT" },
+  "America/Dawson_Creek": { "-7":"PT" },
   "America/Anchorage":    { "-9":"AKST","-8":"AKDT" },
   "Pacific/Honolulu":     { "-10":"HST" },
   "Europe/London":        { "0":"GMT",  "1":"BST" },
@@ -1882,6 +1884,7 @@ function renderHome() {
     ["America/Phoenix","Arizona (MST, no DST)"],
     ["America/Regina","Saskatchewan (CST, no DST)"],
     ["America/Los_Angeles","Pacific Time (PST/PDT)"],
+    ["America/Dawson_Creek","British Columbia (PT, no DST)"],
     ["America/Anchorage","Alaska (AKST/AKDT)"],
     ["Pacific/Honolulu","Hawaii (HST)"],
     ["Europe/London","United Kingdom (GMT/BST)"],
