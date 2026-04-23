@@ -2960,7 +2960,7 @@ function parseScheduleRule(raw) {
   if (!raw) return null;
   const s = raw.trim();
   // variable (see EVENTS tab) — dates driven entirely by EVENTS, no generated dates
-  if (/^variable\b/i.test(s)) return { type: 'variable' };
+  if (/^variable\b/i.test(s) || /see EVENTS tab/i.test(s)) return { type: 'variable' };
   const DAY_IDX = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
   const ORD = { '1st':1, 'first':1, '2nd':2, 'second':2, '3rd':3, 'third':3, '4th':4, 'fourth':4 };
 
