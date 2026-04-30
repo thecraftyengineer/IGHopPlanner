@@ -3152,7 +3152,7 @@ let scheduleLoaded = false;
 async function loadHopMaster() {
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=HOP_MASTER`;
-    const resp = await fetch(url, { cache: 'no-store' });
+    const resp = await fetch(url);
     if (!resp.ok) return;
     const csv = await resp.text();
     const rows = parseSheetCSV(csv);
@@ -3242,7 +3242,7 @@ async function loadEvents(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=EVENTS`;
-    const resp = await fetch(url, { cache: 'no-store' });
+    const resp = await fetch(url);
     if (!resp.ok) return;
     const csv = await resp.text();
     const rows = parseSheetCSV(csv);
@@ -3318,7 +3318,7 @@ async function loadThemes(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=THEMES`;
-    const resp = await fetch(url, { cache: 'no-store' });
+    const resp = await fetch(url);
     if (!resp.ok) { THEMES_CACHE[cacheKey] = THEMES_CACHE[cacheKey] || {}; return; }
     const csv = await resp.text();
     const rows = parseSheetCSV(csv);
