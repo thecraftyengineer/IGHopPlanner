@@ -3151,7 +3151,7 @@ let scheduleLoaded = false;
 
 async function loadHopMaster() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=HOP_MASTER`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=HOP_MASTER&_cb=${Date.now()}`;
     const resp = await fetch(url);
     if (!resp.ok) return;
     const csv = await resp.text();
@@ -3241,7 +3241,7 @@ let EVENTS_CACHE = {}; // keyed "YYYY-M" → [{ day, name, et, sub }]
 async function loadEvents(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=EVENTS`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=EVENTS&_cb=${Date.now()}`;
     const resp = await fetch(url);
     if (!resp.ok) return;
     const csv = await resp.text();
@@ -3317,7 +3317,7 @@ let THEMES_CACHE = {}; // keyed "YYYY-M" → { "day|hopName": "theme text" }
 async function loadThemes(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=THEMES`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=THEMES&_cb=${Date.now()}`;
     const resp = await fetch(url);
     if (!resp.ok) { THEMES_CACHE[cacheKey] = THEMES_CACHE[cacheKey] || {}; return; }
     const csv = await resp.text();
