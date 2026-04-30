@@ -2320,6 +2320,10 @@ function renderFrequencyCard() {
     // Hide hop if its end date is before the selected month
     if (sched && sched.endDate && sched.endDate < selectedMonthStart) return;
     const cat = getFreqCategory(rule);
+    // For (see EVENTS tab) one-time hops: hide if no upcoming date found
+    if (cat === 'oneTime' && rule && rule.type === 'annual' && !rule.month) {
+      if (!getOneTimeDate(name, rule)) return;
+    }
     groups[cat].push(name);
   });
 
