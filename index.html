@@ -2286,11 +2286,12 @@ function toggleFreqCat(catId) {
 }
 
 function getOneTimeDate(name, rule) {
-  // For annual rules, build date string from rule month/day
-  if (rule && rule.type === 'annual') {
+  // For annual rules with explicit month/date (e.g. "annual 5/5"), use the rule directly
+  if (rule && rule.type === 'annual' && rule.month && rule.date) {
     const SHM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     return `${SHM[rule.month - 1]} ${rule.date}`;
   }
+  // For "(see EVENTS tab)" hops (annual type but no month/date), fall through to EVENTS_CACHE
   // For (see EVENTS tab) hops, look in EVENTS_CACHE for the selected month and beyond
   const SHM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   // Check current selected month and next 11 months for the first occurrence
