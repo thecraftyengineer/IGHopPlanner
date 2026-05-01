@@ -3318,17 +3318,22 @@ async function loadThemes(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=THEMES`;
+    console.log('[THEMES] fetching for', year, month);
     const resp = await fetch(url);
+    console.log('[THEMES] resp.ok:', resp.ok, 'status:', resp.status);
     if (!resp.ok) { THEMES_CACHE[cacheKey] = THEMES_CACHE[cacheKey] || {}; return; }
     const csv = await resp.text();
+    console.log('[THEMES] csv length:', csv.length, 'preview:', csv.substring(0, 150));
     const rows = parseSheetCSV(csv);
-    if (rows.length < 2) { THEMES_CACHE[cacheKey] = {}; return; }
+    console.log('[THEMES] rows:', rows.length, 'header:', rows[0]);
+    if (rows.length < 2) { THEMES_CACHE[cacheKey] = {}; console.log('[THEMES] no data rows'); return; }
 
     const header = rows[0].map(h => h.toUpperCase().trim());
     const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
     const dateCol  = header.findIndex(h => h.includes('DATE'));
     const themeCol = header.findIndex(h => h.includes('THEME'));
-    if (nameCol === -1 || dateCol === -1 || themeCol === -1) { THEMES_CACHE[cacheKey] = {}; return; }
+    console.log('[THEMES] cols name:', nameCol, 'date:', dateCol, 'theme:', themeCol);
+    if (nameCol === -1 || dateCol === -1 || themeCol === -1) { THEMES_CACHE[cacheKey] = {}; console.log('[THEMES] missing columns'); return; }
 
     const themes = {};
     for (let i = 1; i < rows.length; i++) {
@@ -3358,6 +3363,7 @@ async function loadThemes(year, month) {
     }
 
     THEMES_CACHE[cacheKey] = themes;
+    console.log('[THEMES] cached', Object.keys(themes).length, 'themes for', cacheKey, ':', Object.keys(themes).slice(0,5));
     render();
   } catch(e) {
     console.log('THEMES load error:', e.message);
