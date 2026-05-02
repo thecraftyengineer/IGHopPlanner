@@ -209,6 +209,8 @@ body{
 .drive-btn.connect:hover{background:#6a0dad;}
 .drive-btn.disconnect{background:#f3e8ff;color:#4B0082;border:1px solid #e0d0f0;}
 .drive-sync-indicator{font-size:10px;color:#9d6bbf;margin-left:4px;}
+.safari-warning{background:#FEF3C7;border:1.5px solid #D97706;border-radius:12px;padding:9px 14px;margin-bottom:0.5rem;font-size:12px;color:#78350F;line-height:1.5;display:flex;align-items:flex-start;gap:8px;}
+.safari-warning-dismiss{background:none;border:none;cursor:pointer;font-size:14px;color:#78350F;padding:0;margin-left:auto;flex-shrink:0;line-height:1;}
 .bmc-bar{text-align:center;padding:8px 12px 4px;font-size:11px;}
 .bmc-btn{display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-weight:700;font-size:12px;padding:7px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);transition:opacity 0.15s;}
 .bmc-btn:hover{opacity:0.88;}
@@ -361,6 +363,11 @@ body{
     ⚠️ <strong>Your selections won't be saved</strong> — this browser has storage disabled (possibly Private/Incognito mode). Switch to a regular browser window to save your hops and tasks.
   </div>
   <div id="summary-bar" class="summary-bar"></div>
+  <div id="safari-warning" style="display:none;" class="safari-warning">
+    <span>⚠️</span>
+    <span><strong>Safari may block Google Drive sync.</strong> For reliable data saving, please use Chrome or Firefox.</span>
+    <button class="safari-warning-dismiss" onclick="dismissSafariWarning()" title="Dismiss">✕</button>
+  </div>
   <div id="drive-bar" class="drive-bar disconnected">
     <span style="font-size:16px;">☁️</span>
     <span id="drive-status" style="flex:1;">Connect Google Drive to save your data across all devices</span>
@@ -3468,6 +3475,12 @@ let driveAccessToken = null;
 let driveFileId = null;
 let driveSyncing = false;
 
+function dismissSafariWarning() {
+  const w = document.getElementById('safari-warning');
+  if (w) w.style.display = 'none';
+  if (HAS_STORAGE) localStorage.setItem('safari_warning_dismissed', '1');
+}
+
 function updateDriveBar() {
   const bar = document.getElementById('drive-bar');
   const status = document.getElementById('drive-status');
@@ -3503,14 +3516,18 @@ function driveSignIn() {
         return;
       }
       driveAccessToken = response.access_token;
-      // Save token expiry
       const newExpiry = Date.now() + (response.expires_in * 1000);
       localStorage.setItem('drive_token', driveAccessToken);
       localStorage.setItem('drive_token_expiry', String(newExpiry));
-      // Schedule silent refresh before expiry
+      // Fetch and store user email for hint-based silent refresh
+      // (stays on device in localStorage only — never sent anywhere else)
+      fetch('https://www.googleapis.com/oauth2/v1/userinfo?alt=json', {
+        headers: { Authorization: `Bearer ${driveAccessToken}` }
+      }).then(r => r.json()).then(info => {
+        if (info.email) localStorage.setItem('drive_user_email', info.email);
+      }).catch(() => {});
       scheduleDriveRefresh(newExpiry);
       updateDriveBar();
-      // Try to load existing data from Drive first
       await driveLoad();
     },
   });
@@ -3524,6 +3541,7 @@ function driveSignOut() {
   localStorage.removeItem('drive_token');
   localStorage.removeItem('drive_token_expiry');
   localStorage.removeItem('drive_file_id');
+  localStorage.removeItem('drive_user_email');
   updateDriveBar();
 }
 
@@ -3531,33 +3549,11 @@ function driveSignOut() {
 async function ensureDriveToken() {
   if (!driveAccessToken) return false;
   const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
-  // If token expires within 2 minutes, refresh first
-  if (Date.now() > expiry - 2 * 60 * 1000) {
-    if (_driveRefreshing) return false;
-    if (typeof google === 'undefined' || !google.accounts?.oauth2) return false;
-    _driveRefreshing = true;
-    _driveLastRefreshAttempt = Date.now();
-    return new Promise(resolve => {
-      try {
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: DRIVE_CLIENT_ID,
-          scope: DRIVE_SCOPE,
-          prompt: '',
-          callback: (response) => {
-            _driveRefreshing = false;
-            if (response.error) { resolve(false); return; }
-            driveAccessToken = response.access_token;
-            const newExpiry = Date.now() + (response.expires_in * 1000);
-            localStorage.setItem('drive_token', driveAccessToken);
-            localStorage.setItem('drive_token_expiry', String(newExpiry));
-            scheduleDriveRefresh(newExpiry);
-            updateDriveBar();
-            resolve(true);
-          },
-        });
-        client.requestAccessToken();
-      } catch(e) { _driveRefreshing = false; resolve(false); }
-    });
+  // If token is within 10 minutes of expiry, the scheduled refresh should handle it.
+  // We do NOT attempt a refresh here — that would trigger a popup mid-use.
+  // Just return false so the save shows "reconnect needed" gracefully.
+  if (Date.now() > expiry - 10 * 60 * 1000) {
+    return Date.now() < expiry; // still usable if not actually expired yet
   }
   return true;
 }
@@ -3707,22 +3703,22 @@ let _driveLastRefreshAttempt = 0;
 const DRIVE_REFRESH_COOLDOWN = 10 * 60 * 1000; // 10 minutes
 
 function silentDriveRefresh() {
-  // Guard: don't overlap or retry too soon
   if (_driveRefreshing) return;
   if (Date.now() - _driveLastRefreshAttempt < DRIVE_REFRESH_COOLDOWN) return;
   if (typeof google === 'undefined' || !google.accounts?.oauth2) return;
   _driveRefreshing = true;
   _driveLastRefreshAttempt = Date.now();
+  const hint = localStorage.getItem('drive_user_email') || '';
   try {
     const client = google.accounts.oauth2.initTokenClient({
       client_id: DRIVE_CLIENT_ID,
       scope: DRIVE_SCOPE,
-      prompt: '',  // empty string = skip consent, silent refresh
+      hint: hint,
+      prompt: '',  // empty = skip consent screen; hint helps Google do this silently
       callback: (response) => {
         _driveRefreshing = false;
         if (response.error) {
           console.log('Silent Drive refresh failed:', response.error);
-          // Don't clear token or retry — user can manually reconnect
           return;
         }
         driveAccessToken = response.access_token;
@@ -3730,7 +3726,6 @@ function silentDriveRefresh() {
         const newExpiry = Date.now() + (response.expires_in * 1000);
         localStorage.setItem('drive_token_expiry', String(newExpiry));
         updateDriveBar();
-        // Schedule next refresh
         scheduleDriveRefresh(newExpiry);
       },
     });
@@ -3748,8 +3743,7 @@ document.addEventListener('visibilitychange', () => {
   const token = localStorage.getItem('drive_token');
   if (!token) return;
   const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
-  if (Date.now() > expiry - 2 * 60 * 1000) {
-    // Token expired or about to — refresh silently
+  if (Date.now() > expiry - 10 * 60 * 1000) {
     silentDriveRefresh();
   } else if (!driveAccessToken) {
     // Token is still valid but lost from memory (page stayed open but variable cleared)
@@ -3924,6 +3918,15 @@ async function translateDOM() {
     setTimeout(() => {
       const w = document.getElementById('storage-warning');
       if (w) w.style.display = 'block';
+    }, 500);
+  }
+  // Show Safari warning if applicable (and not previously dismissed)
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent) &&
+    navigator.vendor && navigator.vendor.includes('Apple');
+  if (isSafari && HAS_STORAGE && !localStorage.getItem('safari_warning_dismissed')) {
+    setTimeout(() => {
+      const w = document.getElementById('safari-warning');
+      if (w) w.style.display = 'flex';
     }, 500);
   }
   // Check for saved Drive token
