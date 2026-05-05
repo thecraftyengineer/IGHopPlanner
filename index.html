@@ -3481,6 +3481,12 @@ function dismissSafariWarning() {
   if (HAS_STORAGE) localStorage.setItem('safari_warning_dismissed', '1');
 }
 
+function showReconnectNeeded() {
+  // Token expired — clear from memory but keep localStorage so email hint is preserved
+  driveAccessToken = null;
+  updateDriveBar();
+}
+
 function updateDriveBar() {
   const bar = document.getElementById('drive-bar');
   const status = document.getElementById('drive-status');
@@ -3492,6 +3498,13 @@ function updateDriveBar() {
     btn.textContent = 'Disconnect';
     btn.className = 'drive-btn disconnect';
     btn.onclick = driveSignOut;
+  } else if (localStorage.getItem('drive_token')) {
+    // Had a token before but it expired — show reconnect prompt
+    bar.className = 'drive-bar disconnected';
+    status.innerHTML = '⚠️ Drive session expired — <strong>tap to reconnect</strong>';
+    btn.textContent = 'Reconnect';
+    btn.className = 'drive-btn connect';
+    btn.onclick = driveSignIn;
   } else {
     bar.className = 'drive-bar disconnected';
     status.textContent = 'Connect Google Drive to save your data across all devices';
@@ -3526,7 +3539,6 @@ function driveSignIn() {
       }).then(r => r.json()).then(info => {
         if (info.email) localStorage.setItem('drive_user_email', info.email);
       }).catch(() => {});
-      scheduleDriveRefresh(newExpiry);
       updateDriveBar();
       await driveLoad();
     },
@@ -3537,7 +3549,6 @@ function driveSignIn() {
 function driveSignOut() {
   driveAccessToken = null;
   driveFileId = null;
-  if (_driveRefreshTimer) { clearTimeout(_driveRefreshTimer); _driveRefreshTimer = null; }
   localStorage.removeItem('drive_token');
   localStorage.removeItem('drive_token_expiry');
   localStorage.removeItem('drive_file_id');
@@ -3545,17 +3556,10 @@ function driveSignOut() {
   updateDriveBar();
 }
 
-// Ensure Drive token is fresh before an API call — returns true if valid
+// Ensure Drive token is present — returns true if we have one
+// Actual expiry is caught by 401 responses from the API
 async function ensureDriveToken() {
-  if (!driveAccessToken) return false;
-  const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
-  // If token is within 10 minutes of expiry, the scheduled refresh should handle it.
-  // We do NOT attempt a refresh here — that would trigger a popup mid-use.
-  // Just return false so the save shows "reconnect needed" gracefully.
-  if (Date.now() > expiry - 10 * 60 * 1000) {
-    return Date.now() < expiry; // still usable if not actually expired yet
-  }
-  return true;
+  return !!driveAccessToken;
 }
 
 async function driveSave() {
@@ -3580,6 +3584,7 @@ async function driveSave() {
         `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILE_NAME}'&fields=files(id)`,
         { headers: { Authorization: `Bearer ${driveAccessToken}` } }
       );
+      if (searchResp.status === 401) { showReconnectNeeded(); driveSyncing = false; return; }
       const searchData = await searchResp.json();
       if (searchData.files && searchData.files.length > 0) {
         driveFileId = searchData.files[0].id;
@@ -3587,7 +3592,7 @@ async function driveSave() {
     }
     if (driveFileId) {
       // Update existing file
-      await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
+      const saveResp = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${driveFileId}?uploadType=media`, {
         method: 'PATCH',
         headers: {
           Authorization: `Bearer ${driveAccessToken}`,
@@ -3595,6 +3600,7 @@ async function driveSave() {
         },
         body: data
       });
+      if (saveResp.status === 401) { showReconnectNeeded(); driveSyncing = false; return; }
     } else {
       // Create new file
       const createResp = await fetch(
@@ -3611,6 +3617,7 @@ async function driveSave() {
           })}\r\n--boundary\r\nContent-Type: application/json\r\n\r\n${data}\r\n--boundary--`
         }
       );
+      if (createResp.status === 401) { showReconnectNeeded(); driveSyncing = false; return; }
       const createData = await createResp.json();
       driveFileId = createData.id;
       localStorage.setItem('drive_file_id', driveFileId);
@@ -3636,6 +3643,7 @@ async function driveLoad() {
       `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=name='${DRIVE_FILE_NAME}'&fields=files(id)`,
       { headers: { Authorization: `Bearer ${driveAccessToken}` } }
     );
+    if (searchResp.status === 401) { showReconnectNeeded(); return false; }
     const searchData = await searchResp.json();
     if (!searchData.files || searchData.files.length === 0) {
       // No file yet — save current state to Drive
@@ -3650,6 +3658,7 @@ async function driveLoad() {
       `https://www.googleapis.com/drive/v3/files/${driveFileId}?alt=media`,
       { headers: { Authorization: `Bearer ${driveAccessToken}` } }
     );
+    if (fileResp.status === 401) { showReconnectNeeded(); return false; }
     const data = await fileResp.json();
     // Load data into app state
     if (data.joined) joined = data.joined;
@@ -3669,89 +3678,39 @@ async function driveLoad() {
   }
 }
 
-// Check if we have a saved token that's still valid
+// Check if we have a saved token and restore it
 function checkSavedDriveToken() {
   if (!HAS_STORAGE) return;
   const token = localStorage.getItem('drive_token');
-  const expiry = localStorage.getItem('drive_token_expiry');
-  if (token && expiry && Date.now() < parseInt(expiry)) {
+  if (!token) return;
+  const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
+  if (Date.now() < expiry) {
+    // Token still valid — restore it
     driveAccessToken = token;
     driveFileId = localStorage.getItem('drive_file_id') || null;
     updateDriveBar();
-    // Silently load from Drive in background
     driveLoad();
-    // Schedule a silent refresh 5 minutes before expiry
-    scheduleDriveRefresh(parseInt(expiry));
-  } else if (token) {
-    // Token exists but expired — try silent refresh immediately
-    silentDriveRefresh();
+  } else {
+    // Token expired — show reconnect prompt (but don't auto-popup)
+    updateDriveBar();
   }
 }
 
-// Schedule a silent token refresh before it expires
-let _driveRefreshTimer = null;
-function scheduleDriveRefresh(expiryMs) {
-  if (_driveRefreshTimer) clearTimeout(_driveRefreshTimer);
-  // Refresh 5 minutes before expiry (or immediately if less than 5 min left)
-  const refreshIn = Math.max(0, expiryMs - Date.now() - 5 * 60 * 1000);
-  _driveRefreshTimer = setTimeout(silentDriveRefresh, refreshIn);
-}
-
-// Silently request a new access token without user interaction
-let _driveRefreshing = false;
-let _driveLastRefreshAttempt = 0;
-const DRIVE_REFRESH_COOLDOWN = 10 * 60 * 1000; // 10 minutes
-
-function silentDriveRefresh() {
-  if (_driveRefreshing) return;
-  if (Date.now() - _driveLastRefreshAttempt < DRIVE_REFRESH_COOLDOWN) return;
-  if (typeof google === 'undefined' || !google.accounts?.oauth2) return;
-  _driveRefreshing = true;
-  _driveLastRefreshAttempt = Date.now();
-  const hint = localStorage.getItem('drive_user_email') || '';
-  try {
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: DRIVE_CLIENT_ID,
-      scope: DRIVE_SCOPE,
-      hint: hint,
-      prompt: '',  // empty = skip consent screen; hint helps Google do this silently
-      callback: (response) => {
-        _driveRefreshing = false;
-        if (response.error) {
-          console.log('Silent Drive refresh failed:', response.error);
-          return;
-        }
-        driveAccessToken = response.access_token;
-        localStorage.setItem('drive_token', driveAccessToken);
-        const newExpiry = Date.now() + (response.expires_in * 1000);
-        localStorage.setItem('drive_token_expiry', String(newExpiry));
-        updateDriveBar();
-        scheduleDriveRefresh(newExpiry);
-      },
-    });
-    client.requestAccessToken();
-  } catch(e) {
-    _driveRefreshing = false;
-    console.log('Silent Drive refresh error:', e);
-  }
-}
-
-// When tab becomes visible again (after sleep/background), check token freshness
+// When tab becomes visible again, restore token from memory if it was lost
+// (e.g. browser discarded JS heap while backgrounded)
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
-  // Only act if user had previously connected Drive
+  if (driveAccessToken) return; // already have token in memory
   const token = localStorage.getItem('drive_token');
   if (!token) return;
   const expiry = parseInt(localStorage.getItem('drive_token_expiry') || '0');
-  if (Date.now() > expiry - 10 * 60 * 1000) {
-    silentDriveRefresh();
-  } else if (!driveAccessToken) {
-    // Token is still valid but lost from memory (page stayed open but variable cleared)
+  if (Date.now() < expiry) {
+    // Token still valid — restore silently
     driveAccessToken = token;
     driveFileId = localStorage.getItem('drive_file_id') || null;
     updateDriveBar();
-    scheduleDriveRefresh(expiry);
   }
+  // If expired, updateDriveBar will already show "tap to reconnect" from checkSavedDriveToken
 });
 
 // ═══════════════════════════════════════════════════════════════
