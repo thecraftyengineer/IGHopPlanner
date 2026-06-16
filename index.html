@@ -510,6 +510,71 @@ function getTasksForHop(n) {
 }
 
 // ═══════════════════════════════════════════════════════════════
+// TASK OVERRIDES — per-occurrence task sets from TASKOVERRIDES tab
+// Overrides the default HOP_MASTER tasks for specific dates or ranges.
+// NOTE: For advent-style hops, HOP_MASTER Tasks = the MIDDLE DAY default
+// (most common case). First/last day overrides are in TASKOVERRIDES.
+// This is intentionally opposite to normal hops where HOP_MASTER = full set.
+// See RULES tab for full documentation.
+// ═══════════════════════════════════════════════════════════════
+let TASK_OVERRIDE_CACHE = []; // array of { name, startDate, endDate, tasks }
+
+async function loadTaskOverrides() {
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=TASKOVERRIDES`;
+    const resp = await fetch(url);
+    if (!resp.ok) return; // tab doesn't exist — fail silently
+    const csv = await resp.text();
+    const rows = parseSheetCSV(csv);
+    if (rows.length < 2) return;
+
+    const header = rows[0].map(h => h.toUpperCase().trim());
+    const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const startCol = header.findIndex(h => h.includes('START'));
+    const endCol   = header.findIndex(h => h.includes('END'));
+    const tasksCol = header.findIndex(h => h.includes('TASK'));
+    if (nameCol === -1 || startCol === -1 || tasksCol === -1) return;
+
+    const overrides = [];
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      const name = (row[nameCol] || '').trim();
+      if (!name) continue;
+      const startDate = parseFlexDate((row[startCol] || '').trim());
+      if (!startDate) continue;
+      // End Date optional — if blank, override applies to start date only
+      const endDateRaw = endCol >= 0 ? (row[endCol] || '').trim() : '';
+      const endDate = endDateRaw ? parseFlexDate(endDateRaw) : startDate;
+      if (!endDate) continue;
+      const tasksRaw = (row[tasksCol] || '').trim();
+      let tasks;
+      if (tasksRaw === '[]') tasks = [];
+      else if (!tasksRaw) tasks = [0,1,2,3,4,5,6,7];
+      else tasks = tasksRaw.split(',').map(t => parseInt(t.trim())).filter(t => !isNaN(t));
+      overrides.push({ name: name.toLowerCase(), startDate, endDate, tasks });
+    }
+    TASK_OVERRIDE_CACHE = overrides;
+  } catch(e) {
+    console.log('TASKOVERRIDES load error:', e.message);
+  }
+}
+
+// Get tasks for a specific occurrence — checks TASKOVERRIDES first, falls back to HOP_MASTER
+// More specific (shorter) date ranges take priority over broader ranges
+function getTasksForOccurrence(hopName, year, month, day) {
+  if (!TASK_OVERRIDE_CACHE.length) return getTasksForHop(hopName);
+  const date = new Date(year, month - 1, day, 12, 0, 0);
+  const nameLower = hopName.toLowerCase();
+  const matches = TASK_OVERRIDE_CACHE.filter(o =>
+    o.name === nameLower && date >= o.startDate && date <= o.endDate
+  );
+  if (!matches.length) return getTasksForHop(hopName);
+  // Most specific match wins: sort by range length ascending (shortest = most specific)
+  matches.sort((a, b) => (a.endDate - a.startDate) - (b.endDate - b.startDate));
+  return matches[0].tasks;
+}
+
+// ═══════════════════════════════════════════════════════════════
 // FALLBACK SCHEDULE — used if HOP_MASTER sheet is unavailable
 // When sheet loads successfully, computeSchedule() replaces this
 // ═══════════════════════════════════════════════════════════════
@@ -1813,7 +1878,10 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   const nk = nkey(h.day, h.name, h.sub, cardYear, cardMonth);
   const isOpen = !!expanded[ok];
   const isInfoOpen = !!infoOpen[ok];
-  const taskIndices = getTasksForHop(h.name);
+  // Use per-occurrence task overrides if available, fall back to HOP_MASTER default
+  const cardYr = cardYear !== undefined ? cardYear : vYear;
+  const cardMo = (cardMonth !== undefined ? cardMonth : vMonth) + 1; // convert to 1-indexed
+  const taskIndices = getTasksForOccurrence(h.name, cardYr, cardMo, h.day);
   const safeOk = safe(ok);
   const safeNk = safe(nk);
   const timeStr = convertTime(h.et);
@@ -2236,7 +2304,8 @@ const FREQ_CATS = [
   { id: 'quarterly',  label: 'Quarterly',             tagline: '4 times a year' },
   { id: 'twoThree',   label: '2–3 Times a Month',   tagline: 'Varies by how the calendar falls' },
   { id: 'everyOther', label: 'Every Other Week',     tagline: 'Alternates weekly' },
-  { id: 'weekly',     label: 'Weekly',               tagline: 'Highest frequency' },
+  { id: 'weekly',     label: 'Weekly',               tagline: 'Highest recurring frequency' },
+  { id: 'daily',      label: 'Daily',                tagline: 'Every day — highest commitment' },
   { id: 'variable',   label: 'Variable Dates',       tagline: 'Dates change each month' },
   { id: 'misc',       label: 'Other',                tagline: '' },
 ];
@@ -2244,6 +2313,7 @@ const FREQ_CATS = [
 function getFreqCategory(rule) {
   if (!rule) return 'misc';
   switch (rule.type) {
+    case 'daily':       return 'daily';
     case 'quarterly':  return 'quarterly';
     case 'variable':    return 'variable';
     case 'everyWeek':   return 'weekly';
@@ -3003,6 +3073,8 @@ function parseScheduleRule(raw) {
   if (/^variable\b/i.test(s)) return { type: 'variable' };
   // (see EVENTS tab) alone — one-time occurrence, date managed in EVENTS
   if (/see EVENTS tab/i.test(s)) return { type: 'annual' };
+  // daily — every day in the month (use startDate/endDate on HOP_MASTER to bound it)
+  if (/^daily$/i.test(s)) return { type: 'daily' };
   const DAY_IDX = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
   const ORD = { '1st':1, 'first':1, '2nd':2, 'second':2, '3rd':3, 'third':3, '4th':4, 'fourth':4 };
 
@@ -3084,6 +3156,11 @@ function parseScheduleRule(raw) {
 function computeDatesForRule(rule, year, month) {
   if (!rule) return [];
   if (rule.type === 'variable') return []; // EVENTS tab drives dates for variable hops
+  if (rule.type === 'daily') {
+    // Every day in the month — startDate/endDate on HOP_MASTER bounds the range
+    const daysInMonth = new Date(year, month, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  }
   const daysInMonth = new Date(year, month, 0).getDate();
   const dates = [];
   if (rule.type === 'everyWeek') {
@@ -3357,9 +3434,10 @@ async function loadThemes(year, month) {
     if (rows.length < 2) { THEMES_CACHE[cacheKey] = {}; return; }
 
     const header = rows[0].map(h => h.toUpperCase().trim());
-    const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
-    const dateCol  = header.findIndex(h => h.includes('DATE'));
-    const themeCol = header.findIndex(h => h.includes('THEME'));
+    const nameCol   = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+    const dateCol   = header.findIndex(h => h.includes('DATE') && !h.includes('END'));
+    const themeCol  = header.findIndex(h => h.includes('THEME'));
+    const endDateCol = header.findIndex(h => h.includes('END'));
     if (nameCol === -1 || dateCol === -1 || themeCol === -1) { THEMES_CACHE[cacheKey] = {}; return; }
 
     const themes = {};
@@ -3367,18 +3445,13 @@ async function loadThemes(year, month) {
       const row = rows[i];
       const dateStr = (row[dateCol] || '').trim();
       if (!dateStr) continue;
-      let eYear, eMonth, eDay;
-      const isoMatch = dateStr.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-      const usMatch  = dateStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-      const dotMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
-      if (isoMatch) {
-        eYear = parseInt(isoMatch[1]); eMonth = parseInt(isoMatch[2]); eDay = parseInt(isoMatch[3]);
-      } else if (usMatch) {
-        eMonth = parseInt(usMatch[1]); eDay = parseInt(usMatch[2]); eYear = parseInt(usMatch[3]);
-      } else if (dotMatch) {
-        eMonth = parseInt(dotMatch[1]); eDay = parseInt(dotMatch[2]); eYear = parseInt(dotMatch[3]);
-      } else { continue; }
-      if (eYear !== year || eMonth !== month) continue;
+      const startDate = parseFlexDate(dateStr);
+      if (!startDate) continue;
+
+      // End Date optional — if present, expand theme to all days in that range
+      const endDateRaw = endDateCol >= 0 ? (row[endDateCol] || '').trim() : '';
+      const endDate = endDateRaw ? parseFlexDate(endDateRaw) : startDate;
+      if (!endDate) continue;
 
       const rawName = (row[nameCol] || '').trim();
       const theme = (row[themeCol] || '').trim();
@@ -3386,7 +3459,15 @@ async function loadThemes(year, month) {
 
       const matched = ALL_HOPS.find(h => h.toLowerCase() === rawName.toLowerCase());
       const finalName = matched || rawName;
-      themes[`${eDay}|${finalName}`] = theme;
+
+      // Expand date range — only cache days that fall within requested year/month
+      const cursor = new Date(startDate);
+      while (cursor <= endDate) {
+        if (cursor.getFullYear() === year && cursor.getMonth() + 1 === month) {
+          themes[`${cursor.getDate()}|${finalName}`] = theme;
+        }
+        cursor.setDate(cursor.getDate() + 1);
+      }
     }
 
     THEMES_CACHE[cacheKey] = themes;
@@ -3410,6 +3491,7 @@ async function refreshData() {
   delete EVENTS_CACHE[`${_ny}-${_nm + 1}`];
   delete THEMES_CACHE[`${_ny}-${_nm + 1}`];
   await loadHopMaster();
+  await loadTaskOverrides();
   await loadEvents(vYear, vMonth + 1);
   await loadThemes(vYear, vMonth + 1);
   loadEvents(_ny, _nm + 1);
@@ -3954,6 +4036,7 @@ async function translateDOM() {
   // Must await loadHopMaster so ALL_HOPS is populated before loadEvents
   // tries to match event names against it
   loadHopMaster().then(() => {
+    loadTaskOverrides();
     loadEvents(vYear, vMonth + 1); loadThemes(vYear, vMonth + 1);
     const _nm = vMonth === 11 ? 0 : vMonth + 1;
     const _ny = vMonth === 11 ? vYear + 1 : vYear;
