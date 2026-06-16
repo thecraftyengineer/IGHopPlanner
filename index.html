@@ -523,11 +523,10 @@ let TASK_OVERRIDE_CACHE = []; // array of { name, startDate, endDate, tasks }
 
 async function loadTaskOverrides() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=TASKOVERRIDES`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=TASKOVERRIDES`;
     const resp = await fetch(url);
     if (!resp.ok) return; // tab doesn't exist — fail silently
-    const csv = await resp.text();
-    const rows = parseSheetCSV(csv);
+    const rows = parseSheetJSON(await resp.text());
     if (rows.length < 2) return;
 
     const header = rows[0].map(h => h.toUpperCase().trim());
@@ -3267,11 +3266,10 @@ let scheduleLoaded = false;
 
 async function loadHopMaster() {
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=HOP_MASTER&range=A:L`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=HOP_MASTER`;
     const resp = await fetch(url);
     if (!resp.ok) return;
-    const csv = await resp.text();
-    const rows = parseSheetCSV(csv);
+    const rows = parseSheetJSON(await resp.text());
     if (rows.length < 2) return;
 
     const header = rows[0].map(h => h.toUpperCase().trim());
@@ -3357,11 +3355,10 @@ let EVENTS_CACHE = {}; // keyed "YYYY-M" → [{ day, name, et, sub }]
 async function loadEvents(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=EVENTS`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=EVENTS`;
     const resp = await fetch(url);
     if (!resp.ok) return;
-    const csv = await resp.text();
-    const rows = parseSheetCSV(csv);
+    const rows = parseSheetJSON(await resp.text());
     if (rows.length < 2) return;
 
     const header = rows[0].map(h => h.toUpperCase().trim());
@@ -3444,11 +3441,10 @@ let THEMES_CACHE = {}; // keyed "YYYY-M" → { "day|hopName": "theme text" }
 async function loadThemes(year, month) {
   const cacheKey = `${year}-${month}`;
   try {
-    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=THEMES`;
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=THEMES`;
     const resp = await fetch(url);
     if (!resp.ok) { THEMES_CACHE[cacheKey] = THEMES_CACHE[cacheKey] || {}; return; }
-    const csv = await resp.text();
-    const rows = parseSheetCSV(csv);
+    const rows = parseSheetJSON(await resp.text());
     if (rows.length < 2) { THEMES_CACHE[cacheKey] = {}; return; }
 
     const header = rows[0].map(h => h.toUpperCase().trim());
@@ -3545,6 +3541,34 @@ function parseSheetCSV(csv) {
   row.push(cell.trim());
   if (row.some(c => c !== '')) rows.push(row);
   return rows;
+}
+
+// Parse gviz JSON response into the same row/column array format as parseSheetCSV.
+// gviz JSON is more reliable than CSV — no quoting/escaping issues with cell content.
+// Response format: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
+function parseSheetJSON(text) {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1) return [];
+  try {
+    const data = JSON.parse(text.substring(start, end + 1));
+    if (data.status === 'error' || !data.table) return [];
+    const table = data.table;
+    // Header row comes from cols labels
+    const headerRow = table.cols.map(col => (col.label || '').trim());
+    // Data rows come from rows array (header is NOT included in rows)
+    const dataRows = (table.rows || []).map(row =>
+      table.cols.map((_, i) => {
+        const cell = row.c ? row.c[i] : null;
+        if (!cell || cell.v === null || cell.v === undefined) return '';
+        return String(cell.v).trim();
+      })
+    );
+    return [headerRow, ...dataRows];
+  } catch(e) {
+    console.log('parseSheetJSON error:', e.message);
+    return [];
+  }
 }
 
 function parseSheetTime(raw) {
