@@ -2233,6 +2233,7 @@ function renderHopGraphic(name, small) {
 const FREQ_CATS = [
   { id: 'oneTime',    label: 'One-Time / Annual',   tagline: 'Great place to start!' },
   { id: 'monthly',    label: 'Monthly',              tagline: 'Low commitment, once a month' },
+  { id: 'quarterly',  label: 'Quarterly',             tagline: '4 times a year' },
   { id: 'twoThree',   label: '2–3 Times a Month',   tagline: 'Varies by how the calendar falls' },
   { id: 'everyOther', label: 'Every Other Week',     tagline: 'Alternates weekly' },
   { id: 'weekly',     label: 'Weekly',               tagline: 'Highest frequency' },
@@ -2243,6 +2244,7 @@ const FREQ_CATS = [
 function getFreqCategory(rule) {
   if (!rule) return 'misc';
   switch (rule.type) {
+    case 'quarterly':  return 'quarterly';
     case 'variable':    return 'variable';
     case 'everyWeek':   return 'weekly';
     case 'everyOther':  return 'everyOther';
@@ -3067,6 +3069,14 @@ function parseScheduleRule(raw) {
     const m = MONTH_IDX[annNameMatch[1].toLowerCase()];
     if (m) return { type: 'annual', month: m, date: parseInt(annNameMatch[2]) };
   }
+  // quarterly M/D or quarterly Month D (e.g., "quarterly 5/2", "quarterly May 2")
+  const qtrNumMatch = s.match(/^quarterly (\d{1,2})\/(\d{1,2})$/i);
+  if (qtrNumMatch) return { type: 'quarterly', month: parseInt(qtrNumMatch[1]), date: parseInt(qtrNumMatch[2]) };
+  const qtrNameMatch = s.match(/^quarterly (\w+) (\d{1,2})$/i);
+  if (qtrNameMatch) {
+    const m = MONTH_IDX[qtrNameMatch[1].toLowerCase()];
+    if (m) return { type: 'quarterly', month: m, date: parseInt(qtrNameMatch[2]) };
+  }
   return null;
 }
 
@@ -3113,6 +3123,10 @@ function computeDatesForRule(rule, year, month) {
   } else if (rule.type === 'annual') {
     // Only generate a date if this is the matching month
     if (month === rule.month && rule.date <= daysInMonth) dates.push(rule.date);
+  } else if (rule.type === 'quarterly') {
+    // Generate date every 3 months starting from rule.month
+    const quarterlyMonths = [0, 3, 6, 9].map(o => ((rule.month - 1 + o) % 12) + 1);
+    if (quarterlyMonths.includes(month) && rule.date <= daysInMonth) dates.push(rule.date);
   }
   return dates;
 }
@@ -3260,6 +3274,7 @@ async function loadEvents(year, month) {
     const nameCol   = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
     const timeCol   = header.findIndex(h => h.includes('TIME'));
     const subCol    = header.findIndex(h => h.includes('SUB'));
+    const repeatCol = header.findIndex(h => h.includes('REPEAT'));
     const activeCol = header.findIndex(h => h.includes('ACTIVE'));
 
     if (dateCol === -1 || nameCol === -1) return;
@@ -3282,7 +3297,17 @@ async function loadEvents(year, month) {
       } else if (dotMatch) {
         eMonth = parseInt(dotMatch[1]); eDay = parseInt(dotMatch[2]); eYear = parseInt(dotMatch[3]);
       } else { continue; }
-      if (eYear !== year || eMonth !== month) continue;
+
+      const repeat = repeatCol >= 0 ? (row[repeatCol] || '').trim().toLowerCase() : '';
+      const isAnnual = repeat === 'annual';
+
+      // For annual rows: match on month only (ignore year in the sheet — recurs every year)
+      // For one-time rows: match on exact year and month
+      if (isAnnual) {
+        if (eMonth !== month) continue;
+      } else {
+        if (eYear !== year || eMonth !== month) continue;
+      }
 
       const active = activeCol >= 0 ? (row[activeCol] || '').trim().toUpperCase() !== 'NO' : true;
       if (!active) continue;
