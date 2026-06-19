@@ -988,7 +988,7 @@ function buildEventCard(ev, nowDate, tabMode) {
     ? `<span class="event-sent-badge">✓ Card sent${t.dateSent ? ' · '+formatDateShort(t.dateSent) : ''}</span>`
     : '';
 
-  const personName = pid && persons[pid] ? persons[pid].name : cleanBirthdayName(ev.title);
+  const personName = pid && persons[pid] ? persons[pid].name : ev.title;
   const isManualClass = ev.isManual ? ' manual-event' : '';
   const sentClass = sent ? ' sent' : '';
 
