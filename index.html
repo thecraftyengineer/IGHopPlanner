@@ -142,6 +142,8 @@ body{
 .notes-ta:focus{outline:none;border-color:#4B0082;}
 .notes-ta::placeholder{color:#c4a8df;}
 
+.view-sched-btn{background:#EEEDFE;color:#4B0082;border:1px solid #AFA9EC;padding:5px 14px;border-radius:20px;font-size:12px;cursor:pointer;margin-top:10px;display:inline-block;}
+.view-sched-btn:hover{background:#d8d4f8;}
 /* FREQUENCY SUMMARY CARD */
 .freq-sum-card{background:rgba(255,255,255,0.92);border:1.5px solid #AFA9EC;border-radius:14px;overflow:hidden;margin-bottom:8px;}
 .freq-sum-hdr{background:#EEEDFE;padding:10px 14px;border-bottom:1px solid #CECBF6;}
@@ -2460,6 +2462,161 @@ function renderFrequencyCard() {
   </div>`;
 }
 
+async function viewHopSchedule(name) {
+  const sched = HOP_SCHEDULE[name];
+  const rule = sched ? sched.rule : null;
+
+  // Smart default window based on schedule type
+  let defaultMonths = 3;
+  if (rule) {
+    switch(rule.type) {
+      case 'daily':                           defaultMonths = 1;  break;
+      case 'everyWeek':                       defaultMonths = 2;  break;
+      case 'everyOther': case 'nthAndMth':   defaultMonths = 3;  break;
+      case 'nth': case 'lastWeekday':
+      case 'lastDay': case 'fixed':          defaultMonths = 6;  break;
+      case 'quarterly': case 'annual':
+      case 'variable':                        defaultMonths = 12; break;
+    }
+  }
+
+  // Fetch all themes for this hop from THEMES tab
+  const allThemes = {}; // "YYYY-M-D" → theme text
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=THEMES`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const rows = parseSheetJSON(await resp.text());
+      if (rows.length > 1) {
+        const header = rows[0].map(h => h.toUpperCase().trim());
+        const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+        const dateCol  = header.findIndex(h => h.includes('DATE') && !h.includes('END'));
+        const themeCol = header.findIndex(h => h.includes('THEME'));
+        const endCol   = header.findIndex(h => h.includes('END'));
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if ((row[nameCol] || '').trim().toLowerCase() !== name.toLowerCase()) continue;
+          const startDate = parseFlexDate((row[dateCol] || '').trim());
+          if (!startDate) continue;
+          const endDateRaw = endCol >= 0 ? (row[endCol] || '').trim() : '';
+          const endDate = endDateRaw ? (parseFlexDate(endDateRaw) || startDate) : startDate;
+          const theme = (row[themeCol] || '').trim();
+          if (!theme) continue;
+          const cursor = new Date(startDate);
+          while (cursor <= endDate) {
+            allThemes[`${cursor.getFullYear()}-${cursor.getMonth()+1}-${cursor.getDate()}`] = theme;
+            cursor.setDate(cursor.getDate() + 1);
+          }
+        }
+      }
+    }
+  } catch(e) {}
+
+  // Generate up to 12 months of occurrences (window selector filters in the print page)
+  const today = new Date(); today.setHours(0,0,0,0);
+  const maxEnd = new Date(today.getFullYear(), today.getMonth() + 12, 0);
+  const hopEnd   = (sched && sched.endDate && sched.endDate < maxEnd) ? sched.endDate : maxEnd;
+  const hopStart = (sched && sched.startDate && sched.startDate > today) ? sched.startDate : today;
+
+  const occurrences = [];
+  let cur = new Date(hopStart.getFullYear(), hopStart.getMonth(), 1);
+  const DAY_FULL = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const SHM = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  while (cur <= hopEnd) {
+    const year = cur.getFullYear(), month = cur.getMonth() + 1;
+    let dates = rule ? computeDatesForRule(rule, year, month) : [];
+    if (sched && sched.startDate) dates = dates.filter(d => new Date(year, month-1, d) >= sched.startDate);
+    if (sched && sched.endDate)   dates = dates.filter(d => new Date(year, month-1, d) <= sched.endDate);
+    // Also include EVENTS entries for this hop/month
+    const evts = (EVENTS_CACHE[`${year}-${month}`] || []).filter(e => e.name === name);
+    evts.forEach(e => { if (!dates.includes(e.day)) dates.push(e.day); });
+    dates.sort((a,b) => a-b);
+    dates.forEach(day => {
+      const date = new Date(year, month-1, day);
+      if (date >= hopStart && date <= hopEnd) {
+        const theme = allThemes[`${year}-${month}-${day}`] || '';
+        const iso   = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const label = `${DAY_FULL[date.getDay()]}, ${SHM[month-1]} ${day}, ${year}`;
+        occurrences.push({ iso, label, theme });
+      }
+    });
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const hasThemes = occurrences.some(o => o.theme);
+  const tzLabel   = getTZLabel();
+  const time      = sched && sched.timeET ? convertTime(parseSheetTime(sched.timeET)) : '';
+
+  const rowsHTML = occurrences.map(o =>
+    `<tr data-date="${o.iso}">
+      <td>${o.label}</td>
+      ${hasThemes ? `<td>${o.theme || ''}</td>` : ''}
+    </tr>`
+  ).join('');
+
+  const body = `<!DOCTYPE html><html><head><title>${name} — Schedule</title>
+  <style>
+    body{font-family:Arial,sans-serif;padding:24px 28px;color:#2d0050;max-width:700px;margin:0 auto;}
+    h1{font-size:18px;color:#4B0082;margin:0 0 4px;}
+    .meta{font-size:13px;color:#666;margin-bottom:16px;}
+    .controls{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
+    label{font-size:13px;color:#4B0082;font-weight:500;}
+    select{font-size:13px;border:1px solid #AFA9EC;border-radius:8px;padding:4px 8px;color:#2d0050;}
+    .count{font-size:12px;color:#9d6bbf;font-style:italic;}
+    table{border-collapse:collapse;width:100%;}
+    th{background:#EEEDFE;color:#3C3489;padding:8px 12px;text-align:left;font-size:13px;border-bottom:1px solid #CECBF6;}
+    td{padding:7px 12px;font-size:13px;border-bottom:1px solid #f0e8f8;}
+    tr:last-child td{border-bottom:none;}
+    .empty{color:#999;font-style:italic;font-size:13px;margin-top:12px;}
+    .print-btn{background:#4B0082;color:white;border:none;padding:7px 18px;border-radius:20px;cursor:pointer;font-size:13px;}
+    @media print{.controls{display:none;} .print-btn{display:none;}}
+  </style>
+  </head><body>
+  <h1>${name}</h1>
+  <p class="meta">${time ? `${time} ${tzLabel}` : ''}</p>
+  <div class="controls">
+    <button class="print-btn" onclick="window.print()">🖨️ Print</button>
+    <label>Show next:
+      <select onchange="filterRows(this.value)">
+        <option value="1">1 month</option>
+        <option value="3" ${defaultMonths <= 3 ? 'selected' : ''}>3 months</option>
+        <option value="6" ${defaultMonths === 6 ? 'selected' : ''}>6 months</option>
+        <option value="12" ${defaultMonths >= 12 ? 'selected' : ''}>12 months</option>
+      </select>
+    </label>
+    <span class="count" id="count"></span>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Date</th>
+      ${hasThemes ? '<th>Theme</th>' : ''}
+    </tr></thead>
+    <tbody id="tbody">${rowsHTML}</tbody>
+  </table>
+  <p class="empty" id="empty" style="display:none;">No occurrences in this window.</p>
+  <script>
+    function filterRows(months) {
+      const cutoff = new Date();
+      cutoff.setMonth(cutoff.getMonth() + parseInt(months));
+      cutoff.setHours(23,59,59,999);
+      let visible = 0;
+      document.querySelectorAll('#tbody tr').forEach(tr => {
+        const show = new Date(tr.dataset.date + 'T00:00:00') <= cutoff;
+        tr.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      document.getElementById('count').textContent = visible + ' occurrence' + (visible !== 1 ? 's' : '');
+      document.getElementById('empty').style.display = visible === 0 ? '' : 'none';
+    }
+    filterRows(${defaultMonths});
+  </script>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  if (w) { w.document.write(body); w.document.close(); }
+}
+
 function renderInfo() {
   let html = renderFrequencyCard();
   html += `<p class="info-intro">Tap any hop to see its full description and how to join on Instagram.</p>`;
@@ -2481,6 +2638,7 @@ function renderInfo() {
        ${renderHopGraphic(name)}
         <div class="info-desc">${info.desc}</div>
         ${buildDMLinks(info.dm)}
+        <button class="view-sched-btn" onclick="event.stopPropagation();viewHopSchedule('${safe(name)}')">📅 View Schedule</button>
       </div>` : ''}
     </div>`;
   }).join('');
