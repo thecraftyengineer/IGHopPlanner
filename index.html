@@ -2514,7 +2514,7 @@ async function viewHopSchedule(name) {
 
   // Fetch all EVENTS entries for this hop directly from the EVENTS tab
   // (EVENTS_CACHE only has current + next month; this gets all future dates)
-  const allEvents = []; // { year, month, day }
+  const allEvents = []; // { year, month, day, sub }
   try {
     const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=EVENTS`;
     const resp = await fetch(url);
@@ -2524,6 +2524,7 @@ async function viewHopSchedule(name) {
         const header   = rows[0].map(h => h.toUpperCase().trim());
         const dateCol  = header.findIndex(h => h.includes('DATE'));
         const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+        const subCol   = header.findIndex(h => h.includes('SUB'));
         const repeatCol = header.findIndex(h => h.includes('REPEAT'));
         const activeCol = header.findIndex(h => h.includes('ACTIVE'));
         for (let i = 1; i < rows.length; i++) {
@@ -2533,14 +2534,14 @@ async function viewHopSchedule(name) {
           const startDate = parseFlexDate((row[dateCol] || '').trim());
           if (!startDate) continue;
           const repeat = repeatCol >= 0 ? (row[repeatCol] || '').trim().toLowerCase() : '';
+          const sub = subCol >= 0 ? (row[subCol] || '').trim() : '';
           const today2 = new Date(); today2.setHours(0,0,0,0);
           if (repeat === 'annual') {
-            // Generate this date for current year and next year
             for (let yr = today2.getFullYear(); yr <= today2.getFullYear() + 1; yr++) {
-              allEvents.push({ year: yr, month: startDate.getMonth() + 1, day: startDate.getDate() });
+              allEvents.push({ year: yr, month: startDate.getMonth() + 1, day: startDate.getDate(), sub });
             }
           } else {
-            allEvents.push({ year: startDate.getFullYear(), month: startDate.getMonth() + 1, day: startDate.getDate() });
+            allEvents.push({ year: startDate.getFullYear(), month: startDate.getMonth() + 1, day: startDate.getDate(), sub });
           }
         }
       }
@@ -2570,7 +2571,10 @@ async function viewHopSchedule(name) {
     dates.forEach(day => {
       const date = new Date(year, month-1, day);
       if (date >= hopStart && date <= hopEnd) {
-        const theme = allThemes[`${year}-${month}-${day}`] || '';
+        // Theme: check THEMES tab first, fall back to EVENTS subtitle
+        const themeKey = `${year}-${month}-${day}`;
+        const evtEntry = evts.find(e => e.day === day);
+        const theme = allThemes[themeKey] || (evtEntry && evtEntry.sub) || '';
         const iso   = `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
         const label = `${DAY_FULL[date.getDay()]}, ${SHM[month-1]} ${day}, ${year}`;
         occurrences.push({ iso, label, theme });
