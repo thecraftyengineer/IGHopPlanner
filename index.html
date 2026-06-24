@@ -2586,7 +2586,6 @@ async function viewHopSchedule(name) {
   const hasThemes = occurrences.some(o => o.theme);
   const tzLabel   = getTZLabel();
   const time      = sched && sched.timeET ? convertTime(parseSheetTime(sched.timeET)) : '';
-
   const rowsHTML = occurrences.map(o =>
     `<tr data-date="${o.iso}">
       <td>${o.label}</td>
@@ -2613,7 +2612,7 @@ async function viewHopSchedule(name) {
   </style>
   </head><body>
   <h1>${name}</h1>
-  <p class="meta">${time ? `${time} ${tzLabel}` : ''}</p>
+  <p class="meta">${time || ''}</p>
   <div class="controls">
     <button class="print-btn" onclick="window.print()">🖨️ Print</button>
     <label>Show next:
