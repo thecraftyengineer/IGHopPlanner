@@ -2512,6 +2512,41 @@ async function viewHopSchedule(name) {
     }
   } catch(e) {}
 
+  // Fetch all EVENTS entries for this hop directly from the EVENTS tab
+  // (EVENTS_CACHE only has current + next month; this gets all future dates)
+  const allEvents = []; // { year, month, day }
+  try {
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&headers=1&sheet=EVENTS`;
+    const resp = await fetch(url);
+    if (resp.ok) {
+      const rows = parseSheetJSON(await resp.text());
+      if (rows.length > 1) {
+        const header   = rows[0].map(h => h.toUpperCase().trim());
+        const dateCol  = header.findIndex(h => h.includes('DATE'));
+        const nameCol  = header.findIndex(h => h.includes('HOP') || h.includes('NAME'));
+        const repeatCol = header.findIndex(h => h.includes('REPEAT'));
+        const activeCol = header.findIndex(h => h.includes('ACTIVE'));
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          if ((row[nameCol] || '').trim().toLowerCase() !== name.toLowerCase()) continue;
+          if (activeCol >= 0 && (row[activeCol] || '').trim().toUpperCase() === 'NO') continue;
+          const startDate = parseFlexDate((row[dateCol] || '').trim());
+          if (!startDate) continue;
+          const repeat = repeatCol >= 0 ? (row[repeatCol] || '').trim().toLowerCase() : '';
+          const today2 = new Date(); today2.setHours(0,0,0,0);
+          if (repeat === 'annual') {
+            // Generate this date for current year and next year
+            for (let yr = today2.getFullYear(); yr <= today2.getFullYear() + 1; yr++) {
+              allEvents.push({ year: yr, month: startDate.getMonth() + 1, day: startDate.getDate() });
+            }
+          } else {
+            allEvents.push({ year: startDate.getFullYear(), month: startDate.getMonth() + 1, day: startDate.getDate() });
+          }
+        }
+      }
+    }
+  } catch(e) {}
+
   // Generate up to 12 months of occurrences (window selector filters in the print page)
   const today = new Date(); today.setHours(0,0,0,0);
   const maxEnd = new Date(today.getFullYear(), today.getMonth() + 12, 0);
@@ -2528,8 +2563,8 @@ async function viewHopSchedule(name) {
     let dates = rule ? computeDatesForRule(rule, year, month) : [];
     if (sched && sched.startDate) dates = dates.filter(d => new Date(year, month-1, d) >= sched.startDate);
     if (sched && sched.endDate)   dates = dates.filter(d => new Date(year, month-1, d) <= sched.endDate);
-    // Also include EVENTS entries for this hop/month
-    const evts = (EVENTS_CACHE[`${year}-${month}`] || []).filter(e => e.name === name);
+    // Also include EVENTS entries for this hop/month (from full fetch, not just cache)
+    const evts = allEvents.filter(e => e.year === year && e.month === month);
     evts.forEach(e => { if (!dates.includes(e.day)) dates.push(e.day); });
     dates.sort((a,b) => a-b);
     dates.forEach(day => {
