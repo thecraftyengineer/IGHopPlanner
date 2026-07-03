@@ -1837,7 +1837,7 @@ function renderNextUp() {
     const hopItems = hops.map(h => {
       const t = convertTime(h.et);
       const label = h.sub ? h.sub : h.name;
-      const taskIndices = getTasksForHop(h.name);
+      const taskIndices = getTasksForOccurrence(h.name, eYear, eMonth + 1, day);
       let rcBadge = '';
       if (taskIndices.includes(0)) {
         const rcKey = `${eYear}-${eMonth}-${h.day}|${h.name}${h.sub ? '::' + h.sub : ''}`;
