@@ -215,6 +215,14 @@ body{
 .drive-sync-indicator{font-size:10px;color:#9d6bbf;margin-left:4px;}
 .safari-warning{background:#FEF3C7;border:1.5px solid #D97706;border-radius:12px;padding:9px 14px;margin-bottom:0.5rem;font-size:12px;color:#78350F;line-height:1.5;display:flex;align-items:flex-start;gap:8px;}
 .safari-warning-dismiss{background:none;border:none;cursor:pointer;font-size:14px;color:#78350F;padding:0;margin-left:auto;flex-shrink:0;line-height:1;}
+.drive-reminder-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.drive-reminder-box{background:white;border-radius:16px;padding:22px 20px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(75,0,130,0.18);}
+.drive-reminder-icon{font-size:28px;text-align:center;margin-bottom:8px;}
+.drive-reminder-title{font-size:15px;font-weight:600;color:#2d0050;text-align:center;margin-bottom:6px;}
+.drive-reminder-text{font-size:13px;color:#555;text-align:center;line-height:1.5;margin-bottom:16px;}
+.drive-reminder-btns{display:flex;flex-direction:column;gap:8px;}
+.drive-reminder-connect{background:#4B0082;color:white;border:none;border-radius:20px;padding:10px;font-size:13px;font-weight:500;cursor:pointer;width:100%;}
+.drive-reminder-skip{background:none;border:none;color:#9d6bbf;font-size:12px;cursor:pointer;padding:4px;}
 .bmc-bar{text-align:center;padding:8px 12px 4px;font-size:11px;}
 .bmc-btn{display:inline-flex;align-items:center;gap:6px;background:#FFDD00;color:#000;font-weight:700;font-size:12px;padding:7px 16px;border-radius:20px;text-decoration:none;border:none;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.12);transition:opacity 0.15s;}
 .bmc-btn:hover{opacity:0.88;}
@@ -283,6 +291,17 @@ body{
      MAIN APP
 ═══════════════════════════════════════ -->
 <div id="app">
+  <div id="drive-reminder-overlay" class="drive-reminder-overlay" style="display:none;">
+    <div class="drive-reminder-box">
+      <div class="drive-reminder-icon">☁️</div>
+      <div class="drive-reminder-title">Save Your Progress</div>
+      <div class="drive-reminder-text">Connect Google Drive to save your hop data across all your devices. Your data stays private — only you can access it.</div>
+      <div class="drive-reminder-btns">
+        <button class="drive-reminder-connect" onclick="dismissDriveReminder(true)">Connect Google Drive</button>
+        <button class="drive-reminder-skip" onclick="dismissDriveReminder(false)">Not right now</button>
+      </div>
+    </div>
+  </div>
   <div class="header">
     <div class="header-top-row">
       <div style="flex:1;">
@@ -369,7 +388,7 @@ body{
   <div id="summary-bar" class="summary-bar"></div>
   <div id="safari-warning" style="display:none;" class="safari-warning">
     <span>⚠️</span>
-    <span><strong>Safari may block Google Drive sync.</strong> For reliable data saving, please use Chrome or Firefox.</span>
+    <span><strong>iOS may block Google Drive sync.</strong> In your browser settings, enable <strong>Allow Cross-Website Tracking</strong> to fix this.</span>
     <button class="safari-warning-dismiss" onclick="dismissSafariWarning()" title="Dismiss">✕</button>
   </div>
   <div id="drive-bar" class="drive-bar disconnected">
@@ -3829,6 +3848,12 @@ function dismissSafariWarning() {
   if (HAS_STORAGE) localStorage.setItem('safari_warning_dismissed', '1');
 }
 
+function dismissDriveReminder(connect) {
+  const el = document.getElementById('drive-reminder-overlay');
+  if (el) el.style.display = 'none';
+  if (connect) driveSignIn();
+}
+
 function showReconnectNeeded() {
   // Token expired — clear from memory but keep localStorage so email hint is preserved
   driveAccessToken = null;
@@ -4268,6 +4293,13 @@ async function translateDOM() {
   }
   // Check for saved Drive token
   checkSavedDriveToken();
+  // Show Drive reminder popup if not connected (each session)
+  setTimeout(() => {
+    if (!driveAccessToken) {
+      const el = document.getElementById('drive-reminder-overlay');
+      if (el) el.style.display = 'flex';
+    }
+  }, 2000);
   // Always show app (Home tab is now the first tab)
   document.getElementById('tz-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
