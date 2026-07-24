@@ -2294,7 +2294,7 @@ function renderCalendar() {
     const hopEls = hops.map(h => {
       const isJoined = !!joined[h.name];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? `${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      const label = h.sub ? `${h.name} — ${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
       return `<div class="vcal-hop ${isJoined ? 'joined' : ''}">${label}</div>`;
     }).join('');
     cells += `<div class="vcal-cell ${isPast && !todayDay ? 'past-cell' : ''}">${numEl}${hopEls}</div>`;
@@ -2894,7 +2894,7 @@ function printCal() {
     const hopHtml = hops.map(h => {
       const isJ = !!joined[h.name];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? `${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      const label = h.sub ? `${h.name} — ${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
       return `<div style="font-size:7.5px;line-height:1.35;padding:1px 2px;margin-bottom:1px;border-radius:2px;${isJ ? 'background:#f3e8ff;color:#2d0050;font-weight:bold;border-left:2px solid #4B0082;padding-left:2px;' : 'color:#555;'}">${label}</div>`;
     }).join('');
     rows += `<td style="border:1px solid #e0d0f0;padding:4px;vertical-align:top;min-height:90px;">
