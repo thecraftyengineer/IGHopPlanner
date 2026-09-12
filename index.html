@@ -2589,8 +2589,8 @@ async function viewHopSchedule(name) {
   while (cur <= hopEnd) {
     const year = cur.getFullYear(), month = cur.getMonth() + 1;
     let dates = rule ? computeDatesForRule(rule, year, month) : [];
-    if (sched && sched.startDate) dates = dates.filter(d => new Date(year, month-1, d) >= sched.startDate);
-    if (sched && sched.endDate)   dates = dates.filter(d => new Date(year, month-1, d) <= sched.endDate);
+    if (sched && sched.startDate) dates = dates.filter(d => new Date(year, month-1, d, 12, 0, 0) >= sched.startDate);
+    if (sched && sched.endDate)   dates = dates.filter(d => new Date(year, month-1, d, 12, 0, 0) <= sched.endDate);
     // Also include EVENTS entries for this hop/month (from full fetch, not just cache)
     const evts = allEvents.filter(e => e.year === year && e.month === month);
     evts.forEach(e => { if (!dates.includes(e.day)) dates.push(e.day); });
