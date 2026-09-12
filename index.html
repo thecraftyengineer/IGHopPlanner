@@ -2596,7 +2596,7 @@ async function viewHopSchedule(name) {
     evts.forEach(e => { if (!dates.includes(e.day)) dates.push(e.day); });
     dates.sort((a,b) => a-b);
     dates.forEach(day => {
-      const date = new Date(year, month-1, day);
+      const date = new Date(year, month-1, day, 12, 0, 0);
       if (date >= hopStart && date <= hopEnd) {
         // Theme: check THEMES tab first, fall back to EVENTS subtitle
         const themeKey = `${year}-${month}-${day}`;
