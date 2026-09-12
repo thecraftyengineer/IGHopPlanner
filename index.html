@@ -268,6 +268,7 @@ body{
       <option value="America/Denver">Mountain Time (MST/MDT)</option>
       <option value="America/Phoenix">Arizona (MST, no DST)</option>
       <option value="America/Regina">Saskatchewan (CST, no DST)</option>
+      <option value="America/Edmonton_NoDST">Alberta (MDT, no DST)</option>
       <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
       <option value="America/Dawson_Creek">British Columbia (PT, no DST)</option>
       <option value="America/Anchorage">Alaska (AKST/AKDT)</option>
@@ -1365,7 +1366,7 @@ function getHopDates(year, month) {
 // IANA timezone → short label map
 const TZ_LABELS = {
   "America/New_York":"EST/EDT","America/Halifax":"AST/ADT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
-  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Dawson_Creek":"PT (UTC-7)","America/Regina":"CST","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
+  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Dawson_Creek":"PT (UTC-7)","America/Regina":"CST","America/Edmonton_NoDST":"MDT","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
   "Europe/London":"GMT/BST","Europe/Paris":"CET/CEST","Europe/Helsinki":"EET/EEST",
   "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
   "Asia/Tokyo":"JST","Australia/Sydney":"AEST/AEDT","Pacific/Auckland":"NZST/NZDT"
@@ -1379,6 +1380,7 @@ const TZ_DST_LABELS = {
   "America/Denver":       { "-7":"MST", "-6":"MDT" },
   "America/Phoenix":       { "-7":"MST" },
   "America/Regina":        { "-6":"CST" },
+  "America/Edmonton_NoDST":{ "-6":"MDT" },
   "America/Los_Angeles":  { "-8":"PST", "-7":"PDT" },
   "America/Dawson_Creek": { "-7":"PT" },
   "America/Anchorage":    { "-9":"AKST","-8":"AKDT" },
@@ -1438,6 +1440,9 @@ const TZ_MIGRATE = {
 // Convert ET time object to user's local time using IANA DST-aware timezone
 function convertTimeIANA(et) {
   if (!et) return "Anytime";
+  // Remap virtual zones to real IANA zones for conversion
+  let tz = userTZ || 'America/New_York';
+  if (tz === 'America/Edmonton_NoDST') tz = 'America/Regina'; // Alberta no DST = UTC-6 year-round
   // Build a reference date in Eastern Time
   let h = et.h;
   if (et.p === 'P' && h !== 12) h += 12;
@@ -1450,7 +1455,6 @@ function convertTimeIANA(et) {
   const etDate = new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'}));
   const utcMs = new Date(etStr).getTime() + (new Date(etStr) - new Date(new Date(etStr).toLocaleString('en-US', {timeZone:'America/New_York'})));
   // Get local time string in user's timezone
-  const tz = userTZ || 'America/New_York';
   const localStr = new Date(utcMs).toLocaleString('en-US', {timeZone: tz, hour:'numeric', minute:'2-digit', hour12:true});
   const label = getDynamicTZLabel(tz);
   return localStr.replace(':00','').replace(' AM',' A').replace(' PM',' P') + ' ' + label;
@@ -2017,6 +2021,7 @@ function renderHome() {
     ["America/Denver","Mountain Time (MST/MDT)"],
     ["America/Phoenix","Arizona (MST, no DST)"],
     ["America/Regina","Saskatchewan (CST, no DST)"],
+    ["America/Edmonton_NoDST","Alberta (MDT, no DST)"],
     ["America/Los_Angeles","Pacific Time (PST/PDT)"],
     ["America/Dawson_Creek","British Columbia (PT, no DST)"],
     ["America/Anchorage","Alaska (AKST/AKDT)"],
@@ -3310,6 +3315,13 @@ function parseScheduleRule(raw) {
   const DAY_IDX = { sunday:0, monday:1, tuesday:2, wednesday:3, thursday:4, friday:5, saturday:6 };
   const ORD = { '1st':1, 'first':1, '2nd':2, 'second':2, '3rd':3, 'third':3, '4th':4, 'fourth':4 };
 
+  // every other day | anchor YYYY-MM-DD — alternates every 2 days from anchor
+  const eodMatch = s.match(/^every other day\s*\|\s*anchor (.+)/i);
+  if (eodMatch) {
+    const anchorRaw = eodMatch[1].trim();
+    const anchor = parseFlexDate(anchorRaw) || new Date(anchorRaw + 'T12:00:00');
+    return { type: 'everyOtherDay', anchor };
+  }
   // every other DAY | anchor YYYY-MM-DD  or  M/D/YYYY
   const eoMatch = s.match(/every other (\w+)\s*\|\s*anchor (.+)/i);
   if (eoMatch) {
@@ -3398,6 +3410,12 @@ function computeDatesForRule(rule, year, month) {
   if (rule.type === 'everyWeek') {
     for (let d = 1; d <= daysInMonth; d++)
       if (new Date(year, month - 1, d).getDay() === rule.dayIdx) dates.push(d);
+  } else if (rule.type === 'everyOtherDay') {
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month - 1, d, 12, 0, 0);
+      const diffDays = Math.round((date - rule.anchor) / 86400000);
+      if (diffDays >= 0 && diffDays % 2 === 0) dates.push(d);
+    }
   } else if (rule.type === 'everyOther') {
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(year, month - 1, d, 12, 0, 0); // noon — must match anchor's T12:00 to avoid DST skew
