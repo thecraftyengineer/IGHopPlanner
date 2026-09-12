@@ -2496,6 +2496,7 @@ async function viewHopSchedule(name) {
     switch(rule.type) {
       case 'daily':                           defaultMonths = 1;  break;
       case 'everyWeek':                       defaultMonths = 2;  break;
+      case 'everyOtherDay':                   defaultMonths = 2;  break;
       case 'everyOther': case 'nthAndMth':   defaultMonths = 3;  break;
       case 'nth': case 'lastWeekday':
       case 'lastDay': case 'fixed':          defaultMonths = 6;  break;
@@ -2576,7 +2577,9 @@ async function viewHopSchedule(name) {
   const today = new Date(); today.setHours(0,0,0,0);
   const maxEnd = new Date(today.getFullYear(), today.getMonth() + 12, 0);
   const hopEnd   = (sched && sched.endDate && sched.endDate < maxEnd) ? sched.endDate : maxEnd;
-  const hopStart = (sched && sched.startDate && sched.startDate > today) ? sched.startDate : today;
+  // For everyOtherDay, use anchor as floor so full schedule always shows even if already started
+  const ruleFloor = (rule && rule.type === 'everyOtherDay' && rule.anchor) ? rule.anchor : null;
+  const hopStart = (sched && sched.startDate) ? sched.startDate : (ruleFloor || today);
 
   const occurrences = [];
   let cur = new Date(hopStart.getFullYear(), hopStart.getMonth(), 1);
@@ -3467,6 +3470,9 @@ function parseFlexDate(str) {
   if (us) return new Date(parseInt(us[3]), parseInt(us[1]) - 1, parseInt(us[2]), 12, 0, 0);
   const dot = str.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (dot) return new Date(parseInt(dot[3]), parseInt(dot[1]) - 1, parseInt(dot[2]), 12, 0, 0);
+  // M-D-YYYY or MM-DD-YYYY (US format with dashes)
+  const usDash = str.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if (usDash) return new Date(parseInt(usDash[3]), parseInt(usDash[1]) - 1, parseInt(usDash[2]), 12, 0, 0);
   return null;
 }
 
