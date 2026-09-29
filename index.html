@@ -32,6 +32,8 @@ body{
 .month-nav{display:flex;align-items:center;gap:6px;flex-shrink:0;margin-top:2px;}
 .nav-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;color:white;display:flex;align-items:center;justify-content:center;}
 .nav-btn:active{background:rgba(255,255,255,0.3);}
+.today-btn{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:8px;padding:0 8px;height:28px;cursor:pointer;font-size:11px;font-weight:600;color:white;white-space:nowrap;}
+.today-btn:active{background:rgba(255,255,255,0.3);}
 .month-label{font-size:12px;font-weight:500;color:white;min-width:82px;text-align:center;}
 
 /* SUMMARY */
@@ -271,6 +273,7 @@ body{
       <option value="America/Edmonton_NoDST">Alberta (MDT, no DST)</option>
       <option value="America/Los_Angeles">Pacific Time (PST/PDT)</option>
       <option value="America/Dawson_Creek">British Columbia (PT, no DST)</option>
+      <option value="America/Whitehorse">Yukon (PT, no DST)</option>
       <option value="America/Anchorage">Alaska (AKST/AKDT)</option>
       <option value="Pacific/Honolulu">Hawaii (HST)</option>
       <option value="Europe/London">United Kingdom (GMT/BST)</option>
@@ -316,6 +319,7 @@ body{
         <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
         <div class="month-label" id="month-label"></div>
         <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+        <button class="today-btn" onclick="goToToday()" title="Go to current month">Today</button>
         <button class="nav-btn" id="refresh-btn" onclick="refreshData()" title="Refresh schedule from sheet" style="font-size:14px;">&#8635;</button>
       </div>
     </div>
@@ -1366,7 +1370,7 @@ function getHopDates(year, month) {
 // IANA timezone → short label map
 const TZ_LABELS = {
   "America/New_York":"EST/EDT","America/Halifax":"AST/ADT","America/Chicago":"CST/CDT","America/Denver":"MST/MDT",
-  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Dawson_Creek":"PT (UTC-7)","America/Regina":"CST","America/Edmonton_NoDST":"MDT","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
+  "America/Phoenix":"MST","America/Los_Angeles":"PST/PDT","America/Dawson_Creek":"PT (UTC-7)","America/Whitehorse":"PT (UTC-7)","America/Regina":"CST","America/Edmonton_NoDST":"MDT","America/Anchorage":"AKST/AKDT","Pacific/Honolulu":"HST",
   "Europe/London":"GMT/BST","Europe/Paris":"CET/CEST","Europe/Helsinki":"EET/EEST",
   "Europe/Moscow":"MSK","Asia/Kolkata":"IST","Asia/Shanghai":"CST",
   "Asia/Tokyo":"JST","Australia/Sydney":"AEST/AEDT","Pacific/Auckland":"NZST/NZDT"
@@ -1383,6 +1387,7 @@ const TZ_DST_LABELS = {
   "America/Edmonton_NoDST":{ "-6":"MDT" },
   "America/Los_Angeles":  { "-8":"PST", "-7":"PDT" },
   "America/Dawson_Creek": { "-7":"PT" },
+  "America/Whitehorse":    { "-7":"PT" },
   "America/Anchorage":    { "-9":"AKST","-8":"AKDT" },
   "Pacific/Honolulu":     { "-10":"HST" },
   "Europe/London":        { "0":"GMT",  "1":"BST" },
@@ -1634,6 +1639,14 @@ function saveTZ() {
 function changeTZ() {
   // Switch to Home tab where TZ selector lives
   setTab('home');
+}
+
+function goToToday() {
+  const now = new Date();
+  vYear = now.getFullYear();
+  vMonth = now.getMonth();
+  saveState();
+  render();
 }
 
 function changeMonth(d) {
@@ -2024,6 +2037,7 @@ function renderHome() {
     ["America/Edmonton_NoDST","Alberta (MDT, no DST)"],
     ["America/Los_Angeles","Pacific Time (PST/PDT)"],
     ["America/Dawson_Creek","British Columbia (PT, no DST)"],
+    ["America/Whitehorse","Yukon (PT, no DST)"],
     ["America/Anchorage","Alaska (AKST/AKDT)"],
     ["Pacific/Honolulu","Hawaii (HST)"],
     ["Europe/London","United Kingdom (GMT/BST)"],
