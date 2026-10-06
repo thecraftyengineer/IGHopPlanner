@@ -1917,6 +1917,37 @@ function renderNextUp() {
   </div>`;
 }
 
+// Returns { current, total } for bounded hops (those with an endDate), null otherwise
+function getDayCount(hopName, year, month, day) {
+  const sched = HOP_SCHEDULE[hopName];
+  if (!sched || !sched.startDate || !sched.endDate) return null;
+  const rule = sched.rule;
+  if (!rule) return null;
+
+  // Iterate months from startDate (or endDate month) through endDate month
+  const startDate = sched.startDate;
+  const endDate   = sched.endDate;
+  const allDates  = [];
+  let cur = new Date(startDate ? startDate.getFullYear() : endDate.getFullYear(),
+                     startDate ? startDate.getMonth()    : endDate.getMonth(), 1);
+  const endCur = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+
+  while (cur <= endCur) {
+    const yr = cur.getFullYear(), mo = cur.getMonth() + 1;
+    let dates = computeDatesForRule(rule, yr, mo);
+    if (startDate) dates = dates.filter(d => new Date(yr, mo-1, d, 12, 0, 0) >= startDate);
+    dates = dates.filter(d => new Date(yr, mo-1, d, 12, 0, 0) <= endDate);
+    dates.forEach(d => allDates.push({ year: yr, month: mo, day: d }));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+
+  const total = allDates.length;
+  if (total === 0) return null;
+  const idx = allDates.findIndex(d => d.year === year && d.month === month && d.day === day);
+  if (idx === -1) return null;
+  return { current: idx + 1, total };
+}
+
 function buildHopCard(h, isPast, cardYear, cardMonth) {
   const ok = okey(h.day, h.name, h.sub, cardYear, cardMonth);
   const nk = nkey(h.day, h.name, h.sub, cardYear, cardMonth);
@@ -1926,6 +1957,12 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   const cardYr = cardYear !== undefined ? cardYear : vYear;
   const cardMo = (cardMonth !== undefined ? cardMonth : vMonth) + 1; // convert to 1-indexed
   const taskIndices = getTasksForOccurrence(h.name, cardYr, cardMo, h.day);
+
+  // Day count badge for bounded hops
+  const dayCount = getDayCount(h.name, cardYr, cardMo, h.day);
+  const dayCountBadge = dayCount
+    ? `<span style="font-size:10px;color:#9d6bbf;font-weight:400;margin-left:5px;">· Day ${dayCount.current} of ${dayCount.total}</span>`
+    : '';
   const safeOk = safe(ok);
   const safeNk = safe(nk);
   const timeStr = convertTime(h.et);
@@ -2004,7 +2041,7 @@ function buildHopCard(h, isPast, cardYear, cardMonth) {
   return `<div class="hop-card ${isPast ? 'past-card' : ''}">
     <div class="hop-card-top" onclick="toggleExpand('${safeOk}')">
       <div style="flex:1;min-width:0;">
-        <div class="hop-card-name">${h.name}${taskModIcon}${rcBadge}</div>
+        <div class="hop-card-name">${h.name}${taskModIcon}${rcBadge}${dayCountBadge}</div>
         ${taskModTooltip}
         ${h.sub ? `<div class="hop-card-sub">${h.sub}</div>` : h.theme ? `<div class="hop-card-sub">${h.theme}</div>` : ''}
       </div>
@@ -2313,7 +2350,9 @@ function renderCalendar() {
     const hopEls = hops.map(h => {
       const isJoined = !!joined[h.name];
       const timeStr = convertTime(h.et);
-      const label = h.sub ? `${h.name} — ${h.sub} (${timeStr})` : h.theme ? `${h.name} — ${h.theme} (${timeStr})` : h.name + ' (' + timeStr + ')';
+      const dc = getDayCount(h.name, vYear, vMonth + 1, d);
+      const dcStr = dc ? ` · Day ${dc.current}/${dc.total}` : '';
+      const label = h.sub ? `${h.name} — ${h.sub}${dcStr} (${timeStr})` : h.theme ? `${h.name} — ${h.theme}${dcStr} (${timeStr})` : h.name + dcStr + ' (' + timeStr + ')';
       return `<div class="vcal-hop ${isJoined ? 'joined' : ''}">${label}</div>`;
     }).join('');
     cells += `<div class="vcal-cell ${isPast && !todayDay ? 'past-cell' : ''}">${numEl}${hopEls}</div>`;
